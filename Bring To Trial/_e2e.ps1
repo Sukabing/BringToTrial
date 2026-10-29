@@ -1,4 +1,4 @@
-# Copy the project to a temp dir, fill silent placeholder audio, run the playthrough testcase.
+# Copy the project to a temp dir, fill silent placeholders only for MISSING audio, run the playthrough testcase.
 $ErrorActionPreference = "Stop"
 $src = "E:\Projects\RenPy\Bring To Trial"
 $dst = Join-Path $env:TEMP "btt_full_test"
@@ -18,8 +18,12 @@ if ($LASTEXITCODE -ne 0) { throw "ffmpeg failed" }
 
 $script = Get-Content (Join-Path $dst "game\script.rpy") -Raw
 $names = [regex]::Matches($script, '(?:voice|music) "([^"]+\.ogg)"') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
-foreach ($n in $names) { Copy-Item $silence (Join-Path $dst "game\$n") -Force }
-Write-Output ("placeholder ogg: " + $names.Count)
+$made = 0
+foreach ($n in $names) {
+    $target = Join-Path $dst "game\$n"
+    if (-not (Test-Path $target)) { Copy-Item $silence $target -Force; $made++ }
+}
+Write-Output ("audio refs: {0}, placeholders created: {1}" -f $names.Count, $made)
 
 Copy-Item (Join-Path $src "_playthrough.rpy") (Join-Path $dst "game\_playthrough.rpy")
 & "$sdk\lib\py3-windows-x86_64\python.exe" "$sdk\renpy.py" $dst test full_playthrough 2>&1 |

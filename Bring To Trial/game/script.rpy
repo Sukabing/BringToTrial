@@ -672,8 +672,8 @@ label lu_emptiness_c:
     lu "[line]"
     jump ga_emptiness_choice
 
-    scene art20_choice4 with fade
 label ga_emptiness_choice:
+    scene art20_choice4 with fade
     $ opt_a = t("聆听「温水灵魂」", "Hear: The Lukewarm Soul")
     $ opt_b = t("聆听「初心弃离」", "Hear: Left Thy First Love")
     $ opt_c = t("聆听「莫自欺」", "Hear: Be Not Deceived")
@@ -855,14 +855,14 @@ label monk_emptiness_c:
     monk "[line]"
     jump emptiness_end
 
-    scene art22_look_at_them with fade
 label emptiness_end:
-    scene art23_despair with fade
+    scene art22_look_at_them with fade
     # 过渡到第三审
     voice "vo_narr_035.ogg"
     $ line = t("—— 第三审：脱离根基 ——", "—— Third Trial: Severed from the Root ——")
     narrator "[line]"
 
+    scene art23_despair with fade
     voice "vo_narr_036.ogg"
     $ line = t("至此，少年失去了他初来乍到时的那种故作矜持与傲慢的神态，", "By now the youth had shed all the feigned poise and arrogance he had worn when he first entered.")
     narrator "[line]"
@@ -995,8 +995,8 @@ label lu_root_c:
     lu "[line]"
     jump ga_root_choice
 
-    scene art25_choice6 with fade
 label ga_root_choice:
+    scene art25_choice6 with fade
     $ opt_a = t("聆听「葡萄树与枝子」", "Hear: The True Vine")
     $ opt_b = t("聆听「野橄榄与枝子」", "Hear: The Wild Olive Tree")
     $ opt_c = t("聆听「溪水义人」", "Hear: Tree by the Rivers")
@@ -1217,8 +1217,8 @@ label monk_verdict_c:
     monk "[line]"
     jump youth_amend
 
-    scene art30_ask with fade
 label youth_amend:
+    scene art30_ask with fade
     voice "vo_narr_051.ogg"
     $ line = t("少年意识到了什么，带着渴求询问道。", "The youth realized something, and asked with a voice of longing.")
     narrator "[line]"
