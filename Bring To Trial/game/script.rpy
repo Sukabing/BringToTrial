@@ -1,4 +1,4 @@
-﻿# 三审少年 - 完整可运行版
+# 三审少年 - 完整可运行版
 # 支持中英双语切换 / 全配音占位 / 全选择分支
 
 init python:
@@ -123,7 +123,9 @@ label start:
     centered "[line]"
 
     scene art01_entry with fade
-    play music "bgm_ambient.ogg"
+    ## BGM 尚未制作：文件存在就播，缺了也不会挡住流程
+    if renpy.loadable("bgm_ambient.ogg"):
+        play music "bgm_ambient.ogg"
 
     # ========== 开场 ==========
     voice "vo_narr_001.ogg"
