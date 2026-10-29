@@ -1,0 +1,24 @@
+# Ren'Py 运行时产物
+*/game/saves/
+*/game/cache/
+**/__pycache__/
+*.rpyc
+*.rpymc
+
+# 运行日志与崩溃记录
+*/log.txt
+*/errors.txt
+*/traceback.txt
+
+# 构建产物（演示版发行包）
+*-dists/
+*.zip
+
+# 美术原图（源素材，不入库；转换后的成品在 game/art/ 里）
+美术资源（豆包/
+
+# 编辑器/系统杂项
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp

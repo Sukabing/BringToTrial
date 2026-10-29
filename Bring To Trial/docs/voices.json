@@ -1,0 +1,175 @@
+[
+  {
+    "id": "narrator",
+    "name_zh": "旁白",
+    "name_en": "Narrator",
+    "voice_prefixes": [
+      "vo_narr"
+    ],
+    "line_count": 58,
+    "voice_direction": "中性、低沉、冷静，近乎不带情绪的时间底色；语速偏慢，句尾不拖",
+    "tts_hint": "中性男声或成熟女声皆可；rate 0.9；低情绪强度；不要角色化处理",
+    "gender": "any",
+    "age": "adult",
+    "rate": 0.9,
+    "emotion_presets": [],
+    "reference_line_zh": "少年推开那座沉重的铁门，屋内磬静的黢黑刹时吞噬了他那渺小的身躯。",
+    "reference_line_en": "The youth pushed open the heavy iron gate, and the profound, silent darkness within swallowed his frail frame in an instant.",
+    "reference_voice_file": "vo_narr_001.ogg"
+  },
+  {
+    "id": "s",
+    "name_zh": "少年",
+    "name_en": "Youth",
+    "voice_prefixes": [
+      "vo_s"
+    ],
+    "line_count": 39,
+    "voice_direction": "青年男声，二十上下，声线偏亮却发虚；傲慢时有轻挑的滑音，崩溃处带哭腔",
+    "tts_hint": "青年男声；rate 1.0；需要三档情绪：傲慢／犹疑／啜泣；避免卡通化",
+    "gender": "male",
+    "age": "young",
+    "rate": 1.0,
+    "emotion_presets": [
+      "傲慢",
+      "犹疑",
+      "啜泣"
+    ],
+    "reference_line_zh": "喂，那个鄹邑的，还有那个加利利的，你们在这干嘛？",
+    "reference_line_en": "Ho there, you of Zou, and you of Galilee. What are you doing here?",
+    "reference_voice_file": "vo_s_001.ogg"
+  },
+  {
+    "id": "lu",
+    "name_zh": "鲁鄹邑人（孔子）",
+    "name_en": "Man of Zou",
+    "voice_prefixes": [
+      "vo_lu",
+      "vo_lu_mat",
+      "vo_lu_emp",
+      "vo_lu_root",
+      "vo_lu_amd",
+      "vo_lu_end"
+    ],
+    "line_count": 46,
+    "voice_direction": "长者男声，温厚沉稳，诵经典时气息绵长、字字落地；不激昂",
+    "tts_hint": "老年男声；rate 0.85；强度低，句中停顿可略长；引用经典时保持同一语气",
+    "gender": "male",
+    "age": "elder",
+    "rate": 0.85,
+    "emotion_presets": [
+      "温厚",
+      "断语"
+    ],
+    "reference_line_zh": "君子先慎乎德。有德此有人，有人此有土，有土此有财，有财此有用。",
+    "reference_line_en": "The superior man bends his attention to the cultivation of his virtue. When virtue is there, people will come; when people are there, there will be territory; when there is territory, there will be wealth; when there is wealth, there will be the means of use.",
+    "reference_voice_file": "vo_lu_mat_a.ogg"
+  },
+  {
+    "id": "ga",
+    "name_zh": "加利利拿撒勒人（耶稣）",
+    "name_en": "Man of Nazareth",
+    "voice_prefixes": [
+      "vo_ga",
+      "vo_ga_mat",
+      "vo_ga_emp",
+      "vo_ga_root",
+      "vo_ga_amd",
+      "vo_ga_end"
+    ],
+    "line_count": 39,
+    "voice_direction": "中年男声，音量不高但有穿透，带一点疲惫后的温柔；不煽情",
+    "tts_hint": "中年男声；rate 0.9；轻声但不虚弱；避免布道腔",
+    "gender": "male",
+    "age": "middle",
+    "rate": 0.9,
+    "emotion_presets": [
+      "平和",
+      "劝诫"
+    ],
+    "reference_line_zh": "不要为自己积攒财宝在地上，地上有虫子咬，能锈坏，也有贼挖窟窿来偷；",
+    "reference_line_en": "Lay not up for yourselves treasures upon earth, where moth and rust doth corrupt, and where thieves break through and steal:",
+    "reference_voice_file": "vo_ga_mat_a.ogg"
+  },
+  {
+    "id": "conf",
+    "name_zh": "孔门儒生",
+    "name_en": "Confucian Scholar",
+    "voice_prefixes": [
+      "vo_conf",
+      "vo_conf_mat",
+      "vo_conf_emp",
+      "vo_conf_ver"
+    ],
+    "line_count": 33,
+    "voice_direction": "壮年男声，清正、方正、字正腔圆，语调平直少起伏",
+    "tts_hint": "壮年男声；rate 1.0；咬字清晰；情绪恒定",
+    "gender": "male",
+    "age": "middle",
+    "rate": 1.0,
+    "emotion_presets": [],
+    "reference_line_zh": "为了审判你！",
+    "reference_line_en": "To judge you!",
+    "reference_voice_file": "vo_conf_001.ogg"
+  },
+  {
+    "id": "monk",
+    "name_zh": "苦行修士司祭",
+    "name_en": "Ascetic Monk Priest",
+    "voice_prefixes": [
+      "vo_monk",
+      "vo_monk_mat",
+      "vo_monk_emp",
+      "vo_monk_ver"
+    ],
+    "line_count": 35,
+    "voice_direction": "中老年男声，嗓音粗粝微沙，带诵经的韵律感",
+    "tts_hint": "老年男声；rate 0.85；轻微沙哑与气声；诵经句可加长尾",
+    "gender": "male",
+    "age": "elder",
+    "rate": 0.85,
+    "emotion_presets": [
+      "诵经",
+      "劝诫"
+    ],
+    "reference_line_zh": "此乃「加利利的迦拿之酒」。",
+    "reference_line_en": "This is the wine of Cana in Galilee.",
+    "reference_voice_file": "vo_monk_002.ogg"
+  },
+  {
+    "id": "unknown",
+    "name_zh": "未知声音（未见其形）",
+    "name_en": "Unknown Voice",
+    "voice_prefixes": [
+      "vo_unknown"
+    ],
+    "line_count": 5,
+    "voice_direction": "开场两位圣人只闻其声时的念诵，低沉、远、带空间感",
+    "tts_hint": "lu 与 ga 声线各一遍叠录，或用第三条男声；加混响；rate 0.85",
+    "gender": "male",
+    "age": "elder",
+    "rate": 0.85,
+    "emotion_presets": [],
+    "reference_line_zh": "世衰道微，邪说暴行有作，臣弑其君者有之，子弑其父者有之。",
+    "reference_line_en": "When the world declined, and true principles fell into disuse, perverse doctrines and violent deeds arose. There were instances of ministers murdering their sovereigns, and sons murdering their fathers.",
+    "reference_voice_file": "vo_unknown_001.ogg"
+  },
+  {
+    "id": "other",
+    "name_zh": "另一个自己",
+    "name_en": "The Other Self",
+    "voice_prefixes": [
+      "vo_other"
+    ],
+    "line_count": 3,
+    "voice_direction": "少年自己的另一个我：同一声线的低八度版本，平静且不容置疑",
+    "tts_hint": "少年声线降调 2~3 半音，加轻微混响；rate 0.85；不带情绪",
+    "gender": "male",
+    "age": "young",
+    "rate": 0.85,
+    "emotion_presets": [],
+    "reference_line_zh": "不，没有人能够审判他人，即使他被人们顶礼膜拜，被人们崇奉为圣人。",
+    "reference_line_en": "No. No one can judge another, even if they are revered as sages by the multitudes.",
+    "reference_voice_file": "vo_other_001.ogg"
+  }
+]
