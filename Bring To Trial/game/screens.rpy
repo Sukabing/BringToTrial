@@ -211,18 +211,17 @@ screen choice(items):
                 unhovered SetVariable("menu_tip", "")
                 text_size (say_choice_size())
 
-    ## 鼠标落在某个选择支上时，在下方摊开该词条的阐释，帮玩家看懂这一支讲的是什么
-    if menu_tip:
-        frame:
-            xalign 0.5
-            ypos 520
-            xsize 1400
-            padding (26, 18)
-            background "#0b1016dd"
+    ## 选择支下方常驻一条说明：平时是提示语，鼠标落到某个选项上就换成该词条的阐释
+    frame:
+        xalign 0.5
+        ypos 520
+        xsize 1400
+        padding (26, 18)
+        background "#0b1016dd"
 
-            text menu_tip:
-                style "choice_tip_body"
-                xsize 1348
+        text (menu_tip or t("—— 将鼠标移到选项上，查看该词条的阐释 ——", "— Hover a choice to read its glossary note —")):
+            style "choice_tip_body"
+            xsize 1348
 
 
 style choice_vbox is vbox

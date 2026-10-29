@@ -61,9 +61,10 @@ init python:
     def say_choice_size():
         return int(gui.choice_button_text_size * text_scale())
 
-    ## 悬浮提示：该选择支词条在「词条阐释」里的解释（文档里没有的词条就不显示）
+    ## 选项下方的说明：有词条阐释就显示阐释，文档里没有的词条给一句占位
     def menu_hint(caption):
-        return globals().get("CITAO_HOVER", {}).get(caption.strip("「」"), "")
+        tip = globals().get("CITAO_HOVER", {}).get(caption.strip("「」"), "")
+        return tip or t("「%s」暂无阐释", "\\"%s\\": no note yet") % caption.strip("「」")
 
 '''
 
