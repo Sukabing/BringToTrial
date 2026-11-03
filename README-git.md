@@ -36,8 +36,30 @@ git tag before-xxx
 | --- | --- |
 | `BringToTrial-Demo-dists/` | 打包产物，随时可重打 |
 | `美术资源（豆包/` | 原图约 85 MB，转换后的成品在 `game/art/` 已入库 |
+| `Bring To Trial/bg.wav` | BGM 母带 68 MB，成品是 `game/audio/bgm.ogg` |
 | `game/saves/`、`game/cache/`、`*.rpyc` | Ren'Py 运行时生成 |
 | `log.txt`、`errors.txt`、`traceback.txt` | 运行日志 |
+
+## 发行（GitHub Releases）
+
+仓库：<https://github.com/Sukabing/BringToTrial>　当前发行版：`v1.0`（tag 已推）
+
+```powershell
+# 改完内容之后：重打包 + 推上去
+& "E:\Apps\renpy-8.5.3-sdk\lib\py3-windows-x86_64\python.exe" `
+  "E:\Apps\renpy-8.5.3-sdk\renpy.py" "E:\Apps\renpy-8.5.3-sdk\launcher" `
+  distribute "E:\Projects\RenPy\Bring To Trial" `
+  --dest "E:\Projects\RenPy\BringToTrial-1.0-dists" --package pc
+
+powershell -NoProfile -File "E:\Projects\RenPy\_github_release.ps1"            # 建草稿发行版
+powershell -NoProfile -File "E:\Projects\RenPy\_github_release.ps1" -Publish   # 直接公开
+```
+
+`_github_release.ps1` 干四件事：仓库没有就建、推 `main` 和 tag、建发行版、把 `BringToTrial-1.0-dists\*.zip` 当附件传上去。
+凭据从 Git Credential Manager 取，不落盘。发行说明写在 `RELEASE-NOTES-v1.0.md`。
+
+（脚本里带中文，必须存成 **UTF-8 带 BOM**，否则 Windows PowerShell 5.1 会按 GBK 读、直接语法报错。）
+
 
 ## 重新生成脚本
 
