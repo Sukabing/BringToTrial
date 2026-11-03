@@ -14,6 +14,14 @@ init python:
             return en
 
 default menu_tip = ""
+# 三审各自记错：每审选错达到一半，该审判为 ♦
+default wrong_material = 0
+default wrong_emptiness = 0
+default wrong_root = 0
+default win_material = 0
+default win_emptiness = 0
+default win_root = 0
+default wins = 0
 default persistent.text_scale = 1
 
 init python:
@@ -47,6 +55,27 @@ init python:
         caption = renpy.substitute(caption)
         tip = globals().get("CITAO_HOVER", {}).get(caption.strip("「」"), "")
         return tip or t("「%s」暂无阐释", "\"%s\": no note yet") % caption.strip("「」")
+
+# ---------- 配音侧链：voice 通道一响，背景音乐自动压下去 ----------
+default _ducking = False
+
+init python:
+    DUCK_VOLUME = 0.35     # 有配音时 music 的增益
+    DUCK_FADE_IN = 0.25    # 压下去的时长（秒）
+    DUCK_FADE_OUT = 0.60   # 放回来的时长（秒）
+
+    def _duck_poll():
+        playing = renpy.music.get_playing("voice") is not None
+        if playing == globals().get("_ducking", False):
+            return
+        globals()["_ducking"] = playing
+        renpy.music.set_volume(
+            DUCK_VOLUME if playing else 1.0,
+            DUCK_FADE_IN if playing else DUCK_FADE_OUT,
+            channel="music",
+        )
+
+    config.periodic_callbacks.append(_duck_poll)
 
 # ---------- 角色定义 ----------
 define narrator = Character(None)
@@ -92,6 +121,7 @@ image art30_ask = "art/art30_ask.jpg"
 image art31_leave = "art/art31_leave.jpg"
 image art32_look_back = "art/art32_look_back.jpg"
 image art33_field = "art/art33_field.jpg"
+image art34_run_dark = "art/art34_run_dark.jpg"
 
 label start:
     # 语言选择
@@ -119,13 +149,16 @@ label start:
 
     # ========== 开场：黑屏故事梗概 ==========
     scene black
+    # 台本开头的引入
+    $ line = t("这是一个发生在我们同时代的关于少年受审的故事，也是一个少年破除执迷、重获新生的故事。", "This is a tale set in our own times, of a youth put on trial, and of one who casts off his obsessions to win a new-found life.")
+    centered "[line]"
+
     $ line = t("【故事梗概】\n\n铁门之内，那两位被亿万人顶礼膜拜的圣人——鲁鄹邑人与加利利拿撒勒人——正在等他。\n少年不信他们那套旧道理，只想用自己时代的智慧把他们驳倒。\n于是他等来的不是辩论，而是一场审判：先问物质，再问虚无，最后问那道谁也绕不开的根基。\n而自始至终，被审判的都是他自己。", "【Synopsis】\n\nBehind the iron gate, two men revered by countless millions — the Man of Zou and the Man of Nazareth — are waiting for him.\nThe youth does not believe a word of their old teaching, and means to refute them with the wisdom of his own age.\nSo what awaits him is not a debate but a trial: first materialism, then emptiness, and at last the root no one can walk around.\nAnd all along, he is the one on trial.")
     centered "[line]"
 
     scene art01_entry with fade
-    ## BGM 尚未制作：文件存在就播，缺了也不会挡住流程
-    if renpy.loadable("bgm_ambient.ogg"):
-        play music "bgm_ambient.ogg"
+    ## 背景音乐：game/audio/bgm.ogg（bg.wav 转码，194 秒；主菜单同一首，已在播就不重启）
+    $ renpy.music.play("audio/bgm.ogg", if_changed=True, fadein=2.0)
 
     # ========== 开场 ==========
     voice "vo_narr_001.ogg"
@@ -299,8 +332,10 @@ label start:
         "[tag_a]":
             jump lu_material_a
         "[tag_b]":
+            $ wrong_material += 1
             jump lu_material_b
         "[tag_c]":
+            $ wrong_material += 1
             jump lu_material_c
 
 label lu_material_a:
@@ -316,17 +351,34 @@ label lu_material_a:
     voice "vo_lu_mat_a4.ogg"
     $ line = t("《康诰》曰：「惟命不于常。」道善则得之，不善则失之矣。", "The Announcement to Kang says, The decree is not always the same. Good conduct obtains it; bad conduct loses it.")
     lu "[line]"
+    voice "vo_lu_mat_a5.ogg"
+    $ line = t("《楚书》曰：「楚国无以为宝，惟善以为宝。」", "The Book of Chu says, 'Chu has no treasure but goodness.'")
+    lu "[line]"
+    voice "vo_lu_mat_a6.ogg"
+    $ line = t("舅犯曰：「亡人无以为宝，仁亲以为宝。」", "Jiu Fan said, 'The fugitive prince has no treasure but his benevolent affection for his relatives.'")
+    lu "[line]"
+
     jump ga_material_choice
 
 label lu_material_b:
     voice "vo_lu_mat_b.ogg"
     $ line = t("王何必曰利？亦有仁义而已矣。", "Why must your Majesty use that word profit? What I have are benevolence and righteousness, and these are my only themes.")
     lu "[line]"
+
     voice "vo_lu_mat_b2.ogg"
     $ line = t("王曰「何以利吾国」？大夫曰「何以利吾家」？士庶人曰「何以利吾身」？", "If your Majesty says, What will profit my kingdom? the great officers will say, What will profit my family? and the scholars and common people will say, What will profit myself?")
     lu "[line]"
     voice "vo_lu_mat_b3.ogg"
-    $ line = t("上下交征利而国危矣。苟为后义而先利，不夺不餍。", "Superiors and inferiors will thus strive together after profit, and the kingdom will be endangered. But if righteousness be put last, and profit be put first, they will not be satisfied without grasping the whole.")
+    $ line = t("上下交征利而国危矣。", "Superiors and inferiors will thus strive together after profit, and the kingdom will be endangered.")
+    lu "[line]"
+    voice "vo_lu_mat_b5.ogg"
+    $ line = t("万乘之国弑其君者，必千乘之家；千乘之国弑其君者，必百乘之家。", "For in a kingdom of ten thousand chariots, the murderer of its sovereign will be sure to be the head of a family of a thousand chariots; in a kingdom of a thousand chariots, the murderer of its sovereign will be sure to be the head of a family of a hundred chariots.")
+    lu "[line]"
+    voice "vo_lu_mat_b6.ogg"
+    $ line = t("万取千焉，千取百焉，不为不多矣。", "There are ten thousand in the one, and a thousand in the other—these are not few.")
+    lu "[line]"
+    voice "vo_lu_mat_b7.ogg"
+    $ line = t("苟为后义而先利，不夺不餍。", "But if righteousness be put last, and profit be put first, they will not be satisfied without grasping the whole.")
     lu "[line]"
     voice "vo_lu_mat_b4.ogg"
     $ line = t("未有仁而遗其亲者也，未有义而后其君者也。", "Never has there been benevolence in whose heart the love of his parents was wanting. Never has there been righteousness in whose heart regard to his prince was wanting.")
@@ -337,8 +389,12 @@ label lu_material_c:
     voice "vo_lu_mat_c.ogg"
     $ line = t("生财有大道：生之者众，食之者寡，为之者疾，用之者舒，则财恒足矣。", "There is a great way for the production of wealth: let the producers be many, and the consumers few; let the workers be active, and the spenders moderate; then wealth will always be sufficient.")
     lu "[line]"
+
     voice "vo_lu_mat_c2.ogg"
     $ line = t("仁者以财发身，不仁者以身发财。", "The benevolent man makes wealth advance his person; the unbenevolent man makes his person advance wealth.")
+    lu "[line]"
+    voice "vo_lu_mat_c5.ogg"
+    $ line = t("未有上好仁而下不好义者也，未有好义其事不终者也，未有府库财非其财者也。", "Never has there been a prince of superior character, in whose court inferiors were not fond of righteousness. Never has there been a prince fond of righteousness, whose affairs were not brought to a successful issue. Never has there been a state whose treasury was not well filled, while its wealth was righteously administered.")
     lu "[line]"
     voice "vo_lu_mat_c3.ogg"
     $ line = t("孟献子曰：「畜马乘，不察于鸡豚；伐冰之家，不畜牛羊；百乘之家，不畜聚敛之臣。与其有聚敛之臣，宁有盗臣。」", "Meng Xian said, A minister who keeps horses and chariots will not look after poultry and pigs. A family that has stores of ice will not rear oxen and sheep. A family of a hundred chariots will not keep a minister to scrape together wealth. It is better to have a minister who robs the state, than one who scrapes together wealth.")
@@ -357,8 +413,10 @@ label ga_material_choice:
     $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
     menu:
         "[tag_a]":
+            $ wrong_material += 1
             jump ga_material_a
         "[tag_b]":
+            $ wrong_material += 1
             jump ga_material_b
         "[tag_c]":
             jump ga_material_c
@@ -400,6 +458,10 @@ label ga_material_c:
     voice "vo_ga_mat_c2.ogg"
     $ line = t("我又告诉你们，骆驼穿过针的眼，比财主进神的国还容易呢。", "And again I say unto you, It is easier for a camel to go through the eye of a needle, than for a rich man to enter into the kingdom of God.")
     ga "[line]"
+    voice "vo_ga_mat_c4.ogg"
+    $ line = t("门徒听见这话，就希奇得很，说：「这样谁能得救呢？」", "When his disciples heard it, they were exceedingly amazed, saying, Who then can be saved?")
+    ga "[line]"
+
     voice "vo_ga_mat_c3.ogg"
     $ line = t("在人这是不能的，在神凡事都能。", "With men this is impossible; but with God all things are possible.")
     ga "[line]"
@@ -441,16 +503,26 @@ label youth_material_rebut:
         "[tag_a]":
             jump conf_material_a
         "[tag_b]":
+            $ wrong_material += 1
             jump conf_material_b
         "[tag_c]":
+            $ wrong_material += 1
             jump conf_material_c
 
 label conf_material_a:
     voice "vo_conf_mat_a.ogg"
     $ line = t("孔子迁于蔡三岁，吴伐陈。楚救陈，军于城父。闻孔子在陈蔡之间，楚使人聘孔子。", "Confucius had been in Cai for three years, when Wu invaded Chen. Chu came to the relief of Chen. Hearing that Confucius was between Chen and Cai, the prince of Chu sent messengers to invite him.")
+
     conf "[line]"
+    voice "vo_conf_mat_a6.ogg"
+    $ line = t("孔子将往拜礼。", "Confucius was about to go and pay his respects,")
+    conf "[line]"
+    voice "vo_conf_mat_a7.ogg"
+    $ line = t("陈蔡大夫谋曰：「孔子贤者，所刺讥皆中诸侯之疾。今者久留陈蔡之间，诸大夫所设行皆非仲尼之意。」", "when the great officers of Cai and Chen took counsel together, saying, 'Confucius is a man of virtue and ability. What he finds fault with in the princes, hits the sore point of their government. He has been long here between Chen and Cai, and the measures of all the great officers are contrary to his mind.'")
+    conf "[line]"
+
     voice "vo_conf_mat_a2.ogg"
-    $ line = t("陈蔡大夫谋曰：「孔子贤者，所刺讥皆中诸侯之疾。今楚，大国也，来聘孔子。孔子用于楚，则陈蔡用事大夫危矣。」", "The great officers of Cai and Chen took counsel together, saying, Confucius is a man of virtue. If he should be employed in Chu, then we, the great officers of Chen and Cai, should be in danger.")
+    $ line = t("今楚，大国也，来聘孔子。孔子用于楚，则陈蔡用事大夫危矣。", "Now Chu is a great state, and has sent to invite Confucius. If he should be employed in Chu, then we, the great officers of Chen and Cai, should be in danger.")
     conf "[line]"
     voice "vo_conf_mat_a3.ogg"
     $ line = t("于是乃相与发徒役围孔子于野。不得行，绝粮。从者病，莫能兴。", "Thereupon they jointly sent out their followers to surround Confucius in the wilderness. He could not proceed, and his supplies of food were exhausted. His followers became ill, and were not able to rise.")
@@ -470,6 +542,13 @@ label conf_material_b:
     voice "vo_conf_mat_b2.ogg"
     $ line = t("「王之辅相有如颜回者乎？」曰：「无有。」「王之将率有如子路者乎？」曰：「无有。」", "Has your Majesty any minister to assist you like Yan Hui? No. Has your Majesty any general like Zi Lu? No.")
     conf "[line]"
+    voice "vo_conf_mat_b5.ogg"
+    $ line = t("「王之官尹有如宰予者乎？」曰：「无有。」", "Has your Majesty any officer of administration like Zai Yu? No was the reply.")
+    conf "[line]"
+    voice "vo_conf_mat_b6.ogg"
+    $ line = t("「且楚之祖封于周，号为子男五十里。」", "Moreover, the ancestor of Chu received his appointment from Zhou, with the title of baron, and a territory of fifty li square.")
+    conf "[line]"
+
     voice "vo_conf_mat_b3.ogg"
     $ line = t("「今孔丘述三五之法，明周召之业，王若用之，则楚安得世世堂堂方数千里乎？」", "Now Confucius is setting forth the ways of the Three Kings and Five Lords. If your Majesty employ him, how shall Chu go on to possess its territory of thousands of li square, from generation to generation?")
     conf "[line]"
@@ -488,6 +567,10 @@ label conf_material_c:
     voice "vo_conf_mat_c3.ogg"
     $ line = t("原壤夷俟。子曰：「幼而不孙弟，长而无述焉，老而不死，是为贼。」以杖叩其胫。", "Yuan Rang waited for him in a squatting posture. The Master said to him, In youth, you showed no respect to your elders; in manhood, you have achieved nothing; in old age, you go on living and do not die: you are a thief. And with his staff he tapped his leg.")
     conf "[line]"
+    voice "vo_conf_mat_c4.ogg"
+    $ line = t("阙党童子将命。或问之曰：「益者与？」子曰：「吾见其居于位也，见其与先生并行也，非求益者也，欲速成者也。」", "A boy of the village of Que was conveying a message. Some one said, 'He will make progress, will he not?' The Master said, 'I see him sitting in his place as if he were a full-grown man; I see him walking along with his seniors as if he were their equal. He is not one seeking progress, he is one who would be quick to be a full-grown man.'")
+    conf "[line]"
+
     jump monk_material_choice
 
 label monk_material_choice:
@@ -498,10 +581,12 @@ label monk_material_choice:
     $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
     menu:
         "[tag_a]":
+            $ wrong_material += 1
             jump monk_material_a
         "[tag_b]":
             jump monk_material_b
         "[tag_c]":
+            $ wrong_material += 1
             jump monk_material_c
 
 label monk_material_a:
@@ -556,6 +641,12 @@ label monk_material_c:
     jump material_end
 
 label material_end:
+    # 第一审结算：四组三选一，错到一半就判 ♦
+    if wrong_material >= 2:
+        $ win_material = 0
+        jump material_bad
+    $ win_material = 1
+
     voice "vo_narr_021.ogg"
     scene art17_realize with fade
     $ line = t("少年沉思了一阵，他觉得自己理解得过于肤浅，而当他领悟到其中蕴意后，赧颜汗下。", "The youth fell silent, pondering. He had thought his own understanding shallow, but as the meaning of the words dawned on him, a flush of shame burned across his face.")
@@ -577,6 +668,33 @@ label material_end:
     $ line = t("但他确信，不论明里暗里，眼下伫立在他身前的两位圣人定不单单在宣扬自己的教义，此中当还有别的深意……", "Yet he knew, in his heart of hearts, that the two sages standing before him were not merely preaching their doctrines—there was a deeper meaning beneath it all.")
     narrator "[line]"
 
+    jump material_done
+
+label material_bad:
+    # —— 第一审 ♦：少年没被说服 ——
+    voice "vo_narr_059.ogg"
+    $ line = t("少年思索了一会儿，觉得自己在现实中有时确也对物质生活的丰糜过度执迷，成为某些人口中精致的利己主义者。", "The youth pondered for a while. He admitted that in real life he did at times grow overly obsessed with material abundance, becoming what some called a refined egoist.")
+    narrator "[line]"
+
+    voice "vo_narr_060.ogg"
+    $ line = t("但纵使他面前的两位尊者的言语义有所取，还是难以让他信服：", "Still, even granting that there was merit in the words of the two revered figures before him, he remained unconvinced.")
+    narrator "[line]"
+
+    voice "vo_narr_061.ogg"
+    $ line = t("倘若这种谴责是针对社会的与群像的，那我无意置辩，尽管这听起来更像是浪漫主义的尘言旧论；", "If such condemnation was directed at society and the masses, he would raise no objection, though it sounded like old romantic rhetoric.")
+    narrator "[line]"
+
+    voice "vo_narr_062.ogg"
+    $ line = t("但如果仅是针对我个人的话，那我自当直辞雪谤。更何况无物质充作基底，又怎能强求精神神完意裕呢……", "Yet if it was aimed solely at him as an individual, he must speak out to clear his name. Moreover: without material substance as a foundation, how could one possibly demand full-bodied spiritual wholeness?")
+    narrator "[line]"
+
+    voice "vo_narr_063.ogg"
+    $ line = t("少年不解此审。", "The youth could not comprehend this trial.")
+    narrator "[line]"
+
+    jump material_done
+
+label material_done:
     scene art18_gloomy with fade
     # ========== 第二审：虚无 ==========
     voice "vo_narr_026.ogg"
@@ -623,10 +741,12 @@ label material_end:
     $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
     menu:
         "[tag_a]":
+            $ wrong_emptiness += 1
             jump lu_emptiness_a
         "[tag_b]":
             jump lu_emptiness_b
         "[tag_c]":
+            $ wrong_emptiness += 1
             jump lu_emptiness_c
 
 label lu_emptiness_a:
@@ -684,11 +804,17 @@ label ga_emptiness_choice:
         "[tag_a]":
             jump ga_emptiness_a
         "[tag_b]":
+            $ wrong_emptiness += 1
             jump ga_emptiness_b
         "[tag_c]":
+            $ wrong_emptiness += 1
             jump ga_emptiness_c
 
 label ga_emptiness_a:
+    voice "vo_ga_emp_a0.ogg"
+    $ line = t("你要写信给老底嘉教会的使者，说：那为阿们的，为诚信真实见证的，在神创造万物之上为元首的，说：", "And unto the angel of the church of the Laodiceans write: These things saith the Amen, the faithful and true witness, the beginning of the creation of God:")
+    ga "[line]"
+
     voice "vo_ga_emp_a.ogg"
     $ line = t("我知道你的行为，你也不冷也不热；我巴不得你或冷或热。", "I know thy works, that thou art neither cold nor hot: I would thou wert cold or hot.")
     ga "[line]"
@@ -719,6 +845,10 @@ label ga_emptiness_c:
     voice "vo_ga_emp_c2.ogg"
     $ line = t("各人应当察验自己的行为，这样，他所夸的就专在自己，不在别人了。", "But let every man prove his own work, and then shall he have rejoicing in himself alone, and not in another.")
     ga "[line]"
+    voice "vo_ga_emp_c4.ogg"
+    $ line = t("因为各人必担当自己的担子。我们在道理上受教的，就当将一切善事供给教法师。", "For every man shall bear his own burden. Let him that is taught in the word communicate unto him that teacheth in all good things.")
+    ga "[line]"
+
     voice "vo_ga_emp_c3.ogg"
     $ line = t("不要自欺，神是轻慢不得的。人种的是什么，收的也是什么。", "Be not deceived; God is not mocked: for whatsoever a man soweth, that shall he also reap.")
     ga "[line]"
@@ -730,34 +860,6 @@ label youth_emptiness_q:
     $ line = t("少年言语里闪烁着困惑与一丝绝望。", "The youth's voice wavered, mingled with confusion and a flicker of despair.")
     narrator "[line]"
 
-    voice "vo_s_023.ogg"
-    $ line = t("那我该如何？怎样才能摆脱虚无？", "Then what am I to do? How can I break free from this emptiness?")
-    s "[line]"
-
-    voice "vo_narr_029.ogg"
-    $ line = t("少年回想起自己对物质的「非虚无」的追求，想起曾为之自诩为「罗特希尔德思想」的一切，以及敛财时那盈溢着贪婪的目光善恶不分的冲动。", "He thought back to his pursuit of material things, which he had insisted were not empty. He thought of all he had called his Rothschild ideal, of the greedy, unprincipled gleam in his eyes as he amassed wealth.")
-    narrator "[line]"
-
-    voice "vo_narr_030.ogg"
-    $ line = t("其实他心里也清楚，他追求的「一切为经济原则」终究将幻化为泡沫的残影。", "Deep down he knew that the principle of economy he chased would in the end dissolve like a foam shadow.")
-    narrator "[line]"
-
-    voice "vo_narr_031.ogg"
-    $ line = t("他知道这些所追求的一切终有一天会遇到瓶颈，达到阈值，他也害怕他孜孜以求的同时也是他人所趋之若鹜的一切终被阻滞。", "He knew all his striving would one day hit a ceiling, reach a threshold. He feared that all he pursued, what everyone else pursued, would one day come to a halt.")
-    narrator "[line]"
-
-    voice "vo_narr_032.ogg"
-    $ line = t("「要是有天我达到了我所追求的一切的终点，我的归宿又何在？」他常常迫使自己思考这个问题。", "\"If one day I reach the end of everything I strive for, where will I be then?\" he had often forced himself to ask.")
-    narrator "[line]"
-
-    voice "vo_narr_033.ogg"
-    $ line = t("而为了免于此，他有时也会不明里就的霍霍一切，千金散尽，寄希望以此以持续催生自己生活的动力。", "And to escape that question, he would sometimes recklessly spend everything he had, hoping to keep the momentum of his life going.")
-    narrator "[line]"
-
-    voice "vo_narr_034.ogg"
-    $ line = t("而现在他才真正感到，这一切只是纸糊的一场喜剧，虚无且无义……他懊丧得望着他们，冀望他们能再说些什么……", "But now he truly felt it all was nothing but a paper farce—empty, meaningless… He looked up at them in dejection, longing for them to say more.")
-    narrator "[line]"
-
     scene art29_choice7 with fade
     # 孔门儒生三选一
     $ opt_a = t("聆听「大丈夫」", "Hear: The Great Man")
@@ -766,8 +868,10 @@ label youth_emptiness_q:
     $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
     menu:
         "[tag_a]":
+            $ wrong_emptiness += 1
             jump conf_emptiness_a
         "[tag_b]":
+            $ wrong_emptiness += 1
             jump conf_emptiness_b
         "[tag_c]":
             jump conf_emptiness_c
@@ -812,10 +916,12 @@ label monk_emptiness_choice:
     $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
     menu:
         "[tag_a]":
+            $ wrong_emptiness += 1
             jump monk_emptiness_a
         "[tag_b]":
             jump monk_emptiness_b
         "[tag_c]":
+            $ wrong_emptiness += 1
             jump monk_emptiness_c
 
 label monk_emptiness_a:
@@ -858,6 +964,42 @@ label monk_emptiness_c:
     jump emptiness_end
 
 label emptiness_end:
+    # 第二审结算：四组三选一，错到一半就判 ♦
+    if wrong_emptiness >= 2:
+        $ win_emptiness = 0
+        jump emptiness_bad
+    $ win_emptiness = 1
+
+    # —— 第二审 ♠：少年被问住了 ——
+    scene art21_struggle with fade
+    voice "vo_s_023.ogg"
+    $ line = t("那我该如何？怎样才能摆脱虚无？", "Then what am I to do? How can I break free from this emptiness?")
+    s "[line]"
+
+    voice "vo_narr_029.ogg"
+    $ line = t("少年回想起自己对物质的「非虚无」的追求，想起曾为之自诩为「罗特希尔德思想」的一切，以及敛财时那盈溢着贪婪的目光善恶不分的冲动。", "He thought back to his pursuit of material things, which he had insisted were not empty. He thought of all he had called his Rothschild ideal, of the greedy, unprincipled gleam in his eyes as he amassed wealth.")
+    narrator "[line]"
+
+    voice "vo_narr_030.ogg"
+    $ line = t("其实他心里也清楚，他追求的「一切为经济原则」终究将幻化为泡沫的残影。", "Deep down he knew that the principle of economy he chased would in the end dissolve like a foam shadow.")
+    narrator "[line]"
+
+    voice "vo_narr_031.ogg"
+    $ line = t("他知道这些所追求的一切终有一天会遇到瓶颈，达到阈值，他也害怕他孜孜以求的同时也是他人所趋之若鹜的一切终被阻滞。", "He knew all his striving would one day hit a ceiling, reach a threshold. He feared that all he pursued, what everyone else pursued, would one day come to a halt.")
+    narrator "[line]"
+
+    voice "vo_narr_032.ogg"
+    $ line = t("「要是有天我达到了我所追求的一切的终点，我的归宿又何在？」他常常迫使自己思考这个问题。", "\"If one day I reach the end of everything I strive for, where will I be then?\" he had often forced himself to ask.")
+    narrator "[line]"
+
+    voice "vo_narr_033.ogg"
+    $ line = t("而为了免于此，他有时也会不明里就的霍霍一切，千金散尽，寄希望以此以持续催生自己生活的动力。", "And to escape that question, he would sometimes recklessly spend everything he had, hoping to keep the momentum of his life going.")
+    narrator "[line]"
+
+    voice "vo_narr_034.ogg"
+    $ line = t("而现在他才真正感到，这一切只是纸糊的一场喜剧，虚无且无义……他懊丧得望着他们，冀望他们能再说些什么……", "But now he truly felt it all was nothing but a paper farce—empty, meaningless… He looked up at them in dejection, longing for them to say more.")
+    narrator "[line]"
+
     scene art22_look_at_them with fade
     # 过渡到第三审
     voice "vo_narr_035.ogg"
@@ -873,6 +1015,49 @@ label emptiness_end:
     $ line = t("他感到一种前所未有的丧落与绝望，对最后的一审也已万念俱灰……", "He felt an unprecedented dejection and despair, and all will to fight the final trial had drained away.")
     narrator "[line]"
 
+    jump emptiness_done
+
+label emptiness_bad:
+    # —— 第二审 ♦：少年没被说服 ——
+    scene art21_struggle with fade
+    voice "vo_s_040.ogg"
+    $ line = t("难道真被你们说中？难道我真虚无？倘若如此，那你们又要我如何？", "Can it be that you have truly seen through me? Am I really empty? And if so, what would you have me do?")
+    s "[line]"
+
+    voice "vo_narr_064.ogg"
+    $ line = t("少年回忆起自己对物质的「非虚无」的追求，以及曾为之自诩为「罗特希尔德思想」的一切，以及敛财时那盈溢着贪婪的目光和善恶不分的冲动……", "The youth recalled his so-called non-empty pursuit of material goods, that which he had named his Rothschild philosophy, together with the greedy, morally blind impulses that stirred within him while accumulating wealth…")
+    narrator "[line]"
+
+    voice "vo_narr_065.ogg"
+    $ line = t("但他并不认为这就可以被人名之为虚无，且因此而遭人詈骂，因为自己毕竟还是有生活的目标的：", "Yet he refused to accept that this made him hollow and worthy of reproach. After all, he possessed life-goals of his own:")
+    narrator "[line]"
+
+    voice "vo_narr_066.ogg"
+    $ line = t("有了物质目标的达成，精神丰盈自会接踵而至；而当自身的精神层次达到某一层级，自己自会兼济天下……", "Once material aims were fulfilled, spiritual richness would surely follow. And once his spiritual stature rose to a certain height, he would naturally extend care to the whole world…")
+    narrator "[line]"
+
+    voice "vo_narr_067.ogg"
+    $ line = t("如此庸庸碌碌便是一大半生，而这一大半生却又是如此充实，怎可埋怨我虚无呢？他倨傲地望着他们，想看看他们会如何回应。", "To toil away like this for most of a lifetime was, to his mind, a life of substance. How could anyone accuse him of emptiness? He gazed haughtily at them, waiting for their reply.")
+    narrator "[line]"
+
+    scene art22_look_at_them with fade
+    # 过渡到第三审
+    voice "vo_narr_035.ogg"
+    $ line = t("—— 第三审：脱离根基 ——", "—— Third Trial: Severed from the Root ——")
+    narrator "[line]"
+
+    scene art23_despair with fade
+    voice "vo_narr_068.ogg"
+    $ line = t("至此，少年依旧稀里糊涂，即便自己多少也听进了些许话语，或许也理解了其中的某种蕴意，但他觉得这只不过是局外者对自己的苛刻和怜悯。", "By this point the youth remained confused. Though some words had sunk in and he grasped fragments of their meaning, he believed it was nothing more than outsiders judging him with harshness and pity.")
+    narrator "[line]"
+
+    voice "vo_narr_069.ogg"
+    $ line = t("「他们从未了解过我，他们也从未设身处地地代入我的处境。」少年如是想。他越来越感到恼怒与焦躁，巴不得快点结束这一切。", "\"They have never truly known me. They have never stood in my shoes,\" he thought. Anger and restlessness welled inside him; he longed for all of this to be over quickly.")
+    narrator "[line]"
+
+    jump emptiness_done
+
+label emptiness_done:
     voice "vo_s_024.ogg"
     $ line = t("何为根基？", "What is the root?")
     s "[line]"
@@ -880,6 +1065,157 @@ label emptiness_end:
     voice "vo_conf_003.ogg"
     $ line = t("我们的人民与传统。", "Our people, and our tradition.")
     conf "[line]"
+
+    scene art24_choice5 with fade
+    # 鲁鄹邑人三选一
+    $ opt_a = t("聆听「失民则亡」", "Hear: Losing the People Means Ruin")
+    $ opt_b = t("聆听「民贵君轻」", "Hear: The People Are Most Important")
+    $ opt_c = t("聆听「推恩保民」", "Hear: Extend Kindness to All")
+    $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
+    menu:
+        "[tag_a]":
+            $ wrong_root += 1
+            jump lu_root_a
+        "[tag_b]":
+            $ wrong_root += 1
+            jump lu_root_b
+        "[tag_c]":
+            jump lu_root_c
+
+label lu_root_a:
+    voice "vo_lu_root_a.ogg"
+    $ line = t("桀纣之失天下也，失其民也；失其民者，失其心也。", "Jie and Zhou lost the empire because they lost the people. They lost the people because they lost their hearts.")
+    lu "[line]"
+    voice "vo_lu_root_a2.ogg"
+    $ line = t("得天下有道：得其民，斯得天下矣；得其民有道：得其心，斯得民矣；", "There is a way to get the empire: get the people, and you get the empire. There is a way to get the people: win their hearts, and you get the people.")
+    lu "[line]"
+    voice "vo_lu_root_a3.ogg"
+    $ line = t("得其心有道：所欲与之聚之，所恶勿施尔也。", "There is a way to win their hearts: gather for them what they like, and do not lay on them what they dislike.")
+    lu "[line]"
+    voice "vo_lu_root_a4.ogg"
+    $ line = t("民之归仁也，犹水之就下，兽之走圹也。故为渊驱鱼者，獭也；为丛驱爵者，鹯也；", "The people turn to benevolence as naturally as water flows downward, or beasts run to the wilderness. Therefore it is the otter that drives the fish to the deep pool; it is the hawk that drives the sparrows to the thicket;")
+    lu "[line]"
+    voice "vo_lu_root_a6.ogg"
+    $ line = t("为汤武驱民者，桀与纣也。", "it is Jie and Zhou that drive the people to Tang and Wu.")
+    lu "[line]"
+
+    voice "vo_lu_root_a5.ogg"
+    $ line = t("今天下之君有好仁者，则诸侯皆为之驱矣。虽欲无王，不可得已。", "If there were any prince in the world now who loved benevolence, all the other princes would drive their people to him. Even if he did not wish to become sovereign, he could not avoid it.")
+    lu "[line]"
+    voice "vo_lu_root_a7.ogg"
+    $ line = t("今之欲王者，犹七年之病求三年之艾也。苟为不畜，终身不得。苟不志于仁，终身忧辱，以陷于死亡。", "But those who now desire to be sovereign are like men seeking a three-year-old herb for a seven-year sickness. If it be not stored up now, it will not be got for the whole life. If a man do not set his heart on benevolence, he will be all his life in sorrow and disgrace, and will sink into ruin and death.")
+    lu "[line]"
+    voice "vo_lu_root_a8.ogg"
+    $ line = t("《诗》云：「其何能淑，载胥及溺。」此之谓也。", "It is said in the Book of Poetry, 'How can they be made good? They all sink and drown.' This is the meaning.")
+    lu "[line]"
+
+    jump ga_root_choice
+
+label lu_root_b:
+    voice "vo_lu_root_b.ogg"
+    $ line = t("民为贵，社稷次之，君为轻。", "The people are the most important element in a nation; the spirits of the land and grain are the next; the sovereign is the lightest.")
+    lu "[line]"
+    voice "vo_lu_root_b2.ogg"
+    $ line = t("是故得乎丘民而为天子，得乎天子为诸侯，得乎诸侯为大夫。", "Therefore he who gains the affections of the people becomes sovereign; he who gains the confidence of the sovereign becomes a prince; he who gains the confidence of the prince becomes a great officer.")
+    lu "[line]"
+    voice "vo_lu_root_b3.ogg"
+    $ line = t("诸侯危社稷，则变置。牺牲既成，粢盛既洁，祭祀以时，然而旱干水溢，则变置社稷。", "If the princes endanger the spirits of the land and grain, they are changed for others. When the victims of sacrifice are perfect, and the vessels of grain are clean, and the sacrifices are offered at their proper seasons, yet there are droughts and floods, then the spirits of the land and grain are changed for others.")
+    lu "[line]"
+    jump ga_root_choice
+
+label lu_root_c:
+    voice "vo_lu_root_c.ogg"
+    $ line = t("老吾老，以及人之老；幼吾幼，以及人之幼。天下可运于掌。", "Treat the aged of your own family as aged should be treated, and then extend the same treatment to the aged of other families. Treat the young of your own family as young should be treated, and then extend the same treatment to the young of other families. You may govern the whole kingdom as if you were turning it about in your palm.")
+    lu "[line]"
+    voice "vo_lu_root_c4.ogg"
+    $ line = t("《诗》云：「刑于寡妻，至于兄弟，以御于家邦。」言举斯心加诸彼而已。", "It is said in the Book of Poetry, 'His example was an influence on his wife, it extended to his brothers, and so he regulated the family and the state.' The meaning is, that you have just to take this one heart and apply it to that other case.")
+    lu "[line]"
+
+    voice "vo_lu_root_c2.ogg"
+    $ line = t("故推恩足以保四海，不推恩无以保妻子。", "Therefore the extension of kindness is sufficient to protect all within the four seas; the want of it is sufficient not to protect one's wife and children.")
+    lu "[line]"
+    voice "vo_lu_root_c3.ogg"
+    $ line = t("古之人所以大过人者，无他焉，善推其所为而已矣。", "The reason why the ancients so greatly surpassed other men was no other than this: they were good at extending what they did.")
+    lu "[line]"
+    voice "vo_lu_root_c5.ogg"
+    $ line = t("今恩足以及禽兽，而功不至于百姓者，独何与？", "Now kindness is sufficient to reach to birds and beasts, but the benefit of it does not reach to the people—how is it?")
+    lu "[line]"
+
+    jump ga_root_choice
+
+label ga_root_choice:
+    scene art25_choice6 with fade
+    $ opt_a = t("聆听「葡萄树与枝子」", "Hear: The True Vine")
+    $ opt_b = t("聆听「野橄榄与枝子」", "Hear: The Wild Olive Tree")
+    $ opt_c = t("聆听「溪水义人」", "Hear: Tree by the Rivers")
+    $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
+    menu:
+        "[tag_a]":
+            jump ga_root_a
+        "[tag_b]":
+            $ wrong_root += 1
+            jump ga_root_b
+        "[tag_c]":
+            $ wrong_root += 1
+            jump ga_root_c
+
+label ga_root_a:
+    voice "vo_ga_root_a.ogg"
+    $ line = t("我是真葡萄树，我父是栽培的人。凡属我不结果子的枝子，他就剪去；", "I am the true vine, and my Father is the husbandman. Every branch in me that beareth not fruit he taketh away:")
+    ga "[line]"
+    voice "vo_ga_root_a2.ogg"
+    $ line = t("凡结果子的，他就修理干净，使枝子结果子更多。", "and every branch that beareth fruit, he purgeth it, that it may bring forth more fruit.")
+    ga "[line]"
+    voice "vo_ga_root_a6.ogg"
+    $ line = t("你们因我讲给你们的道，已经干净了。", "Now ye are clean through the word which I have spoken unto you.")
+    ga "[line]"
+
+    voice "vo_ga_root_a3.ogg"
+    $ line = t("你们要常在我里面，我也常在你们里面。枝子若不常在葡萄树上，自己就不能结果子；你们若不常在我里面，也是这样。", "Abide in me, and I in you. As the branch cannot bear fruit of itself, except it abide in the vine; no more can ye, except ye abide in me.")
+    ga "[line]"
+    voice "vo_ga_root_a4.ogg"
+    $ line = t("我是葡萄树，你们是枝子。常在我里面的，我也常在他里面，这人就多结果子；因为离了我，你们就不能做什么。", "I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.")
+    ga "[line]"
+    voice "vo_ga_root_a5.ogg"
+    $ line = t("人若不常在我里面，就像枝子丢在外面枯干，人拾起来，扔在火里烧了。", "If a man abide not in me, he is cast forth as a branch, and is withered; and men gather them, and cast them into the fire, and they are burned.")
+    ga "[line]"
+    jump root_settle
+
+label ga_root_b:
+    voice "vo_ga_root_b.ogg"
+    $ line = t("若有几根枝子被折下来，你这野橄榄得接在其中，一同得着橄榄根的肥汁，你就不可向旧枝子夸口。", "And if some of the branches be broken off, and thou, being a wild olive tree, wert graffed in among them, and with them partakest of the root and fatness of the olive tree; Boast not against the branches.")
+    ga "[line]"
+    voice "vo_ga_root_b2.ogg"
+    $ line = t("若是夸口，当知道不是你托着根，乃是根托着你。", "But if thou boast, thou bearest not the root, but the root thee.")
+    ga "[line]"
+    voice "vo_ga_root_b4.ogg"
+    $ line = t("你若说：「那枝子被折下来，是特为叫我接上。」不错，他们因为不信，所以被折下来；", "Thou wilt say then, The branches were broken off, that I might be graffed in. Well; because of unbelief they were broken off;")
+    ga "[line]"
+
+    voice "vo_ga_root_b3.ogg"
+    $ line = t("你因为信，所以立得住。你不可自高，反要惧怕。神既不爱惜原来的枝子，也必不爱惜你。", "Thou standest by faith. Be not highminded, but fear. For if God spared not the natural branches, take heed lest he also spare not thee.")
+    ga "[line]"
+    jump root_settle
+
+label ga_root_c:
+    voice "vo_ga_root_c.ogg"
+    $ line = t("不从恶人的计谋，不站罪人的道路，不坐亵慢人的座位，惟喜爱耶和华的律法，昼夜思想，这人便为有福。", "Blessed is the man that walketh not in the counsel of the ungodly, nor standeth in the way of sinners, nor sitteth in the seat of the scornful. But his delight is in the law of the Lord; and in his law doth he meditate day and night.")
+    ga "[line]"
+    voice "vo_ga_root_c2.ogg"
+    $ line = t("他要像一棵树栽在溪水旁，按时候结果子，叶子也不枯干。凡他所作的尽都顺利。", "And he shall be like a tree planted by the rivers of water, that bringeth forth his fruit in his season; his leaf also shall not wither; and whatsoever he doeth shall prosper.")
+    ga "[line]"
+    voice "vo_ga_root_c3.ogg"
+    $ line = t("恶人并不是这样，乃像糠秕被风吹散。", "The ungodly are not so: but are like the chaff which the wind driveth away.")
+    ga "[line]"
+    jump root_settle
+
+    # ========== 判决结果 ==========
+label root_settle:
+    # 第三审结算：两组三选一，错一组（一半）就判 ♦
+    if wrong_root >= 1:
+        $ win_root = 0
+        jump root_bad
+    $ win_root = 1
 
     voice "vo_narr_038.ogg"
     $ line = t("少年哀叹着，因为他知道自己在这方面存在罪过，但还是想说说几句聊以自慰的话。", "The youth sighed, knowing full well his guilt in this matter, yet still struggling to find words to justify himself.")
@@ -941,119 +1277,49 @@ label emptiness_end:
     $ line = t("他强抑制自己的泪水，准备聆听对方同样也是最后的控诉。", "he muttered, fighting back the tears, bracing himself for the final condemnation.")
     narrator "[line]"
 
-    scene art24_choice5 with fade
-    # 鲁鄹邑人三选一
-    $ opt_a = t("聆听「失民则亡」", "Hear: Losing the People Means Ruin")
-    $ opt_b = t("聆听「民贵君轻」", "Hear: The People Are Most Important")
-    $ opt_c = t("聆听「推恩保民」", "Hear: Extend Kindness to All")
-    $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
-    menu:
-        "[tag_a]":
-            jump lu_root_a
-        "[tag_b]":
-            jump lu_root_b
-        "[tag_c]":
-            jump lu_root_c
-
-label lu_root_a:
-    voice "vo_lu_root_a.ogg"
-    $ line = t("桀纣之失天下也，失其民也；失其民者，失其心也。", "Jie and Zhou lost the empire because they lost the people. They lost the people because they lost their hearts.")
-    lu "[line]"
-    voice "vo_lu_root_a2.ogg"
-    $ line = t("得天下有道：得其民，斯得天下矣；得其民有道：得其心，斯得民矣；", "There is a way to get the empire: get the people, and you get the empire. There is a way to get the people: win their hearts, and you get the people.")
-    lu "[line]"
-    voice "vo_lu_root_a3.ogg"
-    $ line = t("得其心有道：所欲与之聚之，所恶勿施尔也。", "There is a way to win their hearts: gather for them what they like, and do not lay on them what they dislike.")
-    lu "[line]"
-    voice "vo_lu_root_a4.ogg"
-    $ line = t("民之归仁也，犹水之就下，兽之走圹也。故为渊驱鱼者，獭也；为丛驱爵者，鹯也；", "The people turn to benevolence as naturally as water flows downward, or beasts run to the wilderness. Therefore it is the otter that drives the fish to the deep pool; it is the hawk that drives the sparrows to the thicket;")
-    lu "[line]"
-    voice "vo_lu_root_a5.ogg"
-    $ line = t("今天下之君有好仁者，则诸侯皆为之驱矣。虽欲无王，不可得已。", "If there were any prince in the world now who loved benevolence, all the other princes would drive their people to him. Even if he did not wish to become sovereign, he could not avoid it.")
-    lu "[line]"
-    jump ga_root_choice
-
-label lu_root_b:
-    voice "vo_lu_root_b.ogg"
-    $ line = t("民为贵，社稷次之，君为轻。", "The people are the most important element in a nation; the spirits of the land and grain are the next; the sovereign is the lightest.")
-    lu "[line]"
-    voice "vo_lu_root_b2.ogg"
-    $ line = t("是故得乎丘民而为天子，得乎天子为诸侯，得乎诸侯为大夫。", "Therefore he who gains the affections of the people becomes sovereign; he who gains the confidence of the sovereign becomes a prince; he who gains the confidence of the prince becomes a great officer.")
-    lu "[line]"
-    voice "vo_lu_root_b3.ogg"
-    $ line = t("诸侯危社稷，则变置。牺牲既成，粢盛既洁，祭祀以时，然而旱干水溢，则变置社稷。", "If the princes endanger the spirits of the land and grain, they are changed for others. When the victims of sacrifice are perfect, and the vessels of grain are clean, and the sacrifices are offered at their proper seasons, yet there are droughts and floods, then the spirits of the land and grain are changed for others.")
-    lu "[line]"
-    jump ga_root_choice
-
-label lu_root_c:
-    voice "vo_lu_root_c.ogg"
-    $ line = t("老吾老，以及人之老；幼吾幼，以及人之幼。天下可运于掌。", "Treat the aged of your own family as aged should be treated, and then extend the same treatment to the aged of other families. Treat the young of your own family as young should be treated, and then extend the same treatment to the young of other families. You may govern the whole kingdom as if you were turning it about in your palm.")
-    lu "[line]"
-    voice "vo_lu_root_c2.ogg"
-    $ line = t("故推恩足以保四海，不推恩无以保妻子。", "Therefore the extension of kindness is sufficient to protect all within the four seas; the want of it is sufficient not to protect one's wife and children.")
-    lu "[line]"
-    voice "vo_lu_root_c3.ogg"
-    $ line = t("古之人所以大过人者，无他焉，善推其所为而已矣。", "The reason why the ancients so greatly surpassed other men was no other than this: they were good at extending what they did.")
-    lu "[line]"
-    jump ga_root_choice
-
-label ga_root_choice:
-    scene art25_choice6 with fade
-    $ opt_a = t("聆听「葡萄树与枝子」", "Hear: The True Vine")
-    $ opt_b = t("聆听「野橄榄与枝子」", "Hear: The Wild Olive Tree")
-    $ opt_c = t("聆听「溪水义人」", "Hear: Tree by the Rivers")
-    $ tag_a, tag_b, tag_c = tag(opt_a), tag(opt_b), tag(opt_c)
-    menu:
-        "[tag_a]":
-            jump ga_root_a
-        "[tag_b]":
-            jump ga_root_b
-        "[tag_c]":
-            jump ga_root_c
-
-label ga_root_a:
-    voice "vo_ga_root_a.ogg"
-    $ line = t("我是真葡萄树，我父是栽培的人。凡属我不结果子的枝子，他就剪去；", "I am the true vine, and my Father is the husbandman. Every branch in me that beareth not fruit he taketh away:")
-    ga "[line]"
-    voice "vo_ga_root_a2.ogg"
-    $ line = t("凡结果子的，他就修理干净，使枝子结果子更多。", "and every branch that beareth fruit, he purgeth it, that it may bring forth more fruit.")
-    ga "[line]"
-    voice "vo_ga_root_a3.ogg"
-    $ line = t("你们要常在我里面，我也常在你们里面。枝子若不常在葡萄树上，自己就不能结果子；你们若不常在我里面，也是这样。", "Abide in me, and I in you. As the branch cannot bear fruit of itself, except it abide in the vine; no more can ye, except ye abide in me.")
-    ga "[line]"
-    voice "vo_ga_root_a4.ogg"
-    $ line = t("我是葡萄树，你们是枝子。常在我里面的，我也常在他里面，这人就多结果子；因为离了我，你们就不能做什么。", "I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.")
-    ga "[line]"
-    voice "vo_ga_root_a5.ogg"
-    $ line = t("人若不常在我里面，就像枝子丢在外面枯干，人拾起来，扔在火里烧了。", "If a man abide not in me, he is cast forth as a branch, and is withered; and men gather them, and cast them into the fire, and they are burned.")
-    ga "[line]"
     jump verdict_start
 
-label ga_root_b:
-    voice "vo_ga_root_b.ogg"
-    $ line = t("若有几根枝子被折下来，你这野橄榄得接在其中，一同得着橄榄根的肥汁，你就不可向旧枝子夸口。", "And if some of the branches be broken off, and thou, being a wild olive tree, wert graffed in among them, and with them partakest of the root and fatness of the olive tree; Boast not against the branches.")
-    ga "[line]"
-    voice "vo_ga_root_b2.ogg"
-    $ line = t("若是夸口，当知道不是你托着根，乃是根托着你。", "But if thou boast, thou bearest not the root, but the root thee.")
-    ga "[line]"
-    voice "vo_ga_root_b3.ogg"
-    $ line = t("你因为信，所以立得住。你不可自高，反要惧怕。神既不爱惜原来的枝子，也必不爱惜你。", "Thou standest by faith. Be not highminded, but fear. For if God spared not the natural branches, take heed lest he also spare not thee.")
-    ga "[line]"
+label root_bad:
+    # —— 第三审 ♦：少年不肯认 ——
+    scene art23_despair with fade
+    voice "vo_s_041.ogg"
+    $ line = t("少年（哂笑着）：何以见得我在这方面有过呢？我可是深爱着人类的啊！", "The youth (with a bitter sneer): What grounds are there to say I am at fault in this regard? I hold deep love for humanity!")
+    s "[line]"
+
+    voice "vo_s_042.ogg"
+    $ line = t("难道我不为那些在酒绿灯红的都市的无人问津的角落里的可怜而不幸的人们而感到悲悯吗？", "Do I not feel compassion for the wretched, unfortunate souls forgotten in the shadow-strewn corners of glittering cities?")
+    s "[line]"
+
+    voice "vo_s_043.ogg"
+    $ line = t("难道我无法与那些在那禾稼不登、饿殍遍野的岁月与国度里的苍白无力死去的人们共情吗？", "Can I not empathize with those who perish pale and helpless in lands and seasons of failed harvest and widespread famine?")
+    s "[line]"
+
+    voice "vo_s_044.ogg"
+    $ line = t("难道我不可怜那些受尽回禄之灾，在煨烬满目的焦黑的土地伫立着的孤苦伶仃，受尽雪虐风饕的受难者吗？……凡此种种，怎能说我脱离人民呢。", "Do I not pity the lonely survivors ravaged by fire, standing upon charred, ash-covered ground, tormented by bitter frost and raging gales? … Given all of this, how can you claim I have cut myself off from the people?")
+    s "[line]"
+
+    voice "vo_narr_071.ogg"
+    $ line = t("少年声音渐沉，他明知自己是在诡辩，是在恬不知耻地偷换概念，但这种想法倏忽间就从他的脑海中烟消云散了。", "The youth's voice sinks low. He knows full well he is quibbling, brazenly twisting concepts, yet this awareness swiftly vanishes from his mind.")
+    narrator "[line]"
+
+    voice "vo_s_045.ogg"
+    $ line = t("还有，你说我们的传统，可我又能做得了什么呢？", "Then there is what you call our tradition. What could I possibly do about it?")
+    s "[line]"
+
+    voice "vo_s_046.ogg"
+    $ line = t("难道你们真寄希望于我在中秋赏花灯、鉴明月，在新春张灯结彩、欢忭鼓舞等等诸如此类的形式上的事吗？", "Can you truly expect me to go through empty formalities: admiring lanterns and the bright moon at Mid-Autumn, hanging festive ornaments and rejoicing at the New Year, and the like?")
+    s "[line]"
+
+    voice "vo_s_047.ogg"
+    $ line = t("……至于那些传统的技艺，途穷末路自是历史与社会的选择，更何况它们并没有消失，它们会浸泡在电子福尔马林的溶剂里，供活人投去付之罔闻的一瞥，供死者残留伤春悲秋的想往……", "… As for the ancient crafts, their decline is the choice of history and society. What is more, they have not perished entirely. They lie preserved in the formaldehyde of electronics, receiving indifferent glances from the living, and nostalgic melancholy longings from the dead…")
+    s "[line]"
+
+    voice "vo_s_048.ogg"
+    $ line = t("两位圣人，你们可搞错了吧，这是宏大的抉择，怎可怪罪到我头上？", "O two sages, you are mistaken. These are grand, epoch-spanning choices; how can you lay the blame upon my shoulders?")
+    s "[line]"
+
     jump verdict_start
 
-label ga_root_c:
-    voice "vo_ga_root_c.ogg"
-    $ line = t("不从恶人的计谋，不站罪人的道路，不坐亵慢人的座位，惟喜爱耶和华的律法，昼夜思想，这人便为有福。", "Blessed is the man that walketh not in the counsel of the ungodly, nor standeth in the way of sinners, nor sitteth in the seat of the scornful. But his delight is in the law of the Lord; and in his law doth he meditate day and night.")
-    ga "[line]"
-    voice "vo_ga_root_c2.ogg"
-    $ line = t("他要像一棵树栽在溪水旁，按时候结果子，叶子也不枯干。凡他所作的尽都顺利。", "And he shall be like a tree planted by the rivers of water, that bringeth forth his fruit in his season; his leaf also shall not wither; and whatsoever he doeth shall prosper.")
-    ga "[line]"
-    voice "vo_ga_root_c3.ogg"
-    $ line = t("恶人并不是这样，乃像糠秕被风吹散。", "The ungodly are not so: but are like the chaff which the wind driveth away.")
-    ga "[line]"
-    jump verdict_start
-
-    # ========== 判决结果 ==========
 label verdict_start:
     scene art26_look_up with fade
     voice "vo_narr_043.ogg"
@@ -1104,6 +1370,7 @@ label verdict_start:
 
     voice "vo_narr_050.ogg"
     $ line = t("少年幡然憬悟，他若有所思地说。", "The youth realized, thoughtful.")
+
     narrator "[line]"
 
     voice "vo_s_037.ogg"
@@ -1132,6 +1399,22 @@ label verdict_start:
             jump conf_verdict_c
 
 label conf_verdict_a:
+    voice "vo_conf_ver_a4.ogg"
+    $ line = t("晋灵公不君，厚敛以雕墙，从台上弹人，而观其辟丸也。", "Duke Ling of Jin was no prince. He levied heavy taxes to decorate his walls with carvings. He shot at people from a tower, to see them dodge the pellets.")
+    conf "[line]"
+    voice "vo_conf_ver_a5.ogg"
+    $ line = t("宰夫胹熊蹯不熟，杀之，置诸畚，使妇人载以过朝。", "When his cook failed to stew a bear's paw thoroughly, he put him to death, and ordered the body to be carried out in a basket by women past the court.")
+    conf "[line]"
+    voice "vo_conf_ver_a6.ogg"
+    $ line = t("赵盾、士季见其手，问其故，而患之。", "Zhao Dun and Shi Ji saw the cook's hand, asked the cause, and were grieved.")
+    conf "[line]"
+    voice "vo_conf_ver_a7.ogg"
+    $ line = t("将谏，士季曰：「谏而不入，则莫之继也。会请先，不入，则子继之。」", "They were about to remonstrate with the duke, when Shi Ji said, 'If your remonstrance is not heeded, no one will be able to follow it. Let me go first. If it is of no avail, then you shall follow.'")
+    conf "[line]"
+    voice "vo_conf_ver_a8.ogg"
+    $ line = t("三进及溜，而后视之。曰：「吾知所过矣，将改之。」", "Shi Ji advanced three times, till he came to the eaves of the palace, before the duke saw him. The duke said, 'I know my errors. I will amend them.'")
+    conf "[line]"
+
     voice "vo_conf_ver_a.ogg"
     $ line = t("人谁无过？过而能改，善莫大焉。", "What man is there who errs not? He who errs and can amend is the best of men.")
     conf "[line]"
@@ -1141,6 +1424,10 @@ label conf_verdict_a:
     voice "vo_conf_ver_a3.ogg"
     $ line = t("君能有终，则社稷之固也，岂惟群臣赖之。", "If your Highness can have this end, the state will be stable indeed. It is not only your ministers who depend on it.")
     conf "[line]"
+    voice "vo_conf_ver_a9.ogg"
+    $ line = t("又曰：「衮职有阙，惟仲山甫补之。」能补过也。君能补过，衮不废矣。", "It is said again, 'The duties of the sovereign have deficiencies; it is Zhong Shan Fu who supplies them.' That shows that the sovereign can amend his faults. If your Highness can amend your faults, the royal dignity will not be lost.")
+    conf "[line]"
+
     jump monk_verdict_choice
 
 label conf_verdict_b:
@@ -1150,6 +1437,10 @@ label conf_verdict_b:
     voice "vo_conf_ver_b2.ogg"
     $ line = t("君子之过也，如日月之食焉：过也，人皆见之；更也，人皆仰之。", "The faults of the superior man are like eclipses of the sun and moon. He has his faults, and all men see them; he amends them, and all men look up to him.")
     conf "[line]"
+    voice "vo_conf_ver_b4.ogg"
+    $ line = t("子夏曰：「小人之过也必文。」", "Zi Xia said, 'The faults of the small man are sure to be glossed over.'")
+    conf "[line]"
+
     voice "vo_conf_ver_b3.ogg"
     $ line = t("吾日三省吾身：为人谋而不忠乎？与朋友交而不信乎？传不习乎？", "I daily examine myself on three points: whether, in transacting business for others, I may have been not faithful; whether, in intercourse with friends, I may have been not sincere; whether I may have not mastered and practiced the instructions of my teacher.")
     conf "[line]"
@@ -1162,6 +1453,10 @@ label conf_verdict_c:
     voice "vo_conf_ver_c2.ogg"
     $ line = t("大舜有大焉：善与人同，舍己从人，乐取于人以为善。", "Great Shun had a still greater excellence: he shared with others what was good; he cast aside his own views, and followed those of others; he delighted to take from others in order to do good.")
     conf "[line]"
+    voice "vo_conf_ver_c4.ogg"
+    $ line = t("自耕稼、陶、渔以至为帝，无非取于人者。取诸人以为善，是与人为善者也。", "From his earliest days, plowing the ground, making pottery, fishing, till he became emperor, everything he had was taken from others. To take from others and thereby do good is to do good together with others.")
+    conf "[line]"
+
     voice "vo_conf_ver_c3.ogg"
     $ line = t("故君子莫大乎与人为善。", "Therefore the highest excellence of the superior man is this: to do good together with others.")
     conf "[line]"
@@ -1181,24 +1476,64 @@ label monk_verdict_choice:
             jump monk_verdict_c
 
 label monk_verdict_a:
+    voice "vo_monk_ver_a5.ogg"
+    $ line = t("有一个患病的人，名叫拉撒路，住在伯大尼，就是马利亚和她姐姐马大的村子。", "Now a certain man was sick, named Lazarus, of Bethany, the town of Mary and her sister Martha.")
+    monk "[line]"
+    voice "vo_monk_ver_a6.ogg"
+    $ line = t("耶稣到了，就知道拉撒路在坟墓里已经四天了。", "Then when Jesus came, he found that he had lain in the grave four days already.")
+    monk "[line]"
+    voice "vo_monk_ver_a7.ogg"
+    $ line = t("马大对耶稣说：「主啊，你若早在这里，我兄弟必不死。就是现在，我也知道，你无论向神求什么，神也必赐给你。」", "Then said Martha unto Jesus, Lord, if thou hadst been here, my brother had not died. But I know, that even now, whatsoever thou shalt ask of God, God will give it thee.")
+    monk "[line]"
+
     voice "vo_monk_ver_a.ogg"
     $ line = t("耶稣对她说：「复活在我，生命在我。信我的人虽然死了，也必复活；", "Jesus said unto her, I am the resurrection, and the life: he that believeth in me, though he were dead, yet shall he live:")
     monk "[line]"
     voice "vo_monk_ver_a2.ogg"
     $ line = t("凡活着信我的人必永远不死。你信这话吗？」", "And whosoever liveth and believeth in me shall never die. Believest thou this?")
     monk "[line]"
+    voice "vo_monk_ver_a8.ogg"
+    $ line = t("马大说：「主啊，是的，我信你是基督，是神的儿子，就是那要临到世界的。」", "She saith unto him, Yea, Lord: I believe that thou art the Christ, the Son of God, which should come into the world.")
+    monk "[line]"
+    voice "vo_monk_ver_a9.ogg"
+    $ line = t("耶稣又心里悲叹，来到坟墓前。这坟墓是个洞，有一块石头挡着。", "When Jesus therefore saw her weeping, and the Jews also weeping which came with her, he groaned in the spirit, and was troubled. Then Jesus, again groaning in himself, cometh to the grave. It was a cave, and a stone lay upon it.")
+    monk "[line]"
+    voice "vo_monk_ver_a10.ogg"
+    $ line = t("耶稣说：「你们把石头挪开。」", "Jesus said, Take ye away the stone.")
+    monk "[line]"
+    voice "vo_monk_ver_a11.ogg"
+    $ line = t("那死人的姐姐马大对他说：「主啊，他现在必是臭了，因为他死了已经四天了。」", "Martha, the sister of him that was dead, saith unto him, Lord, by this time he stinketh: for he hath been dead four days.")
+    monk "[line]"
+    voice "vo_monk_ver_a12.ogg"
+    $ line = t("耶稣说：「我不是对你说过，你若信，就必看见神的荣耀吗？」", "Jesus saith unto her, Said I not unto thee, that, if thou wouldest believe, thou shouldest see the glory of God?")
+    monk "[line]"
+    voice "vo_monk_ver_a13.ogg"
+    $ line = t("他们就把石头挪开。", "Then they took away the stone from the place where the dead was laid.")
+    monk "[line]"
     voice "vo_monk_ver_a3.ogg"
     $ line = t("耶稣举目望天，说：「父啊，我感谢你，因为你已经听我。」", "And Jesus lifted up his eyes, and said, Father, I thank thee that thou hast heard me.")
     monk "[line]"
+    voice "vo_monk_ver_a14.ogg"
+    $ line = t("我也知道你常听我，但我说这话是为周围站着的众人，叫他们信是你差了我来。", "And I knew that thou hearest me always: but because of the people which stand by I said it, that they may believe that thou hast sent me.")
+    monk "[line]"
+
     voice "vo_monk_ver_a4.ogg"
     $ line = t("说了这话，就大声呼叫说：「拉撒路，出来！」那死人就出来了。", "And when he thus had spoken, he cried with a loud voice, Lazarus, come forth. And he that was dead came forth.")
     monk "[line]"
+    voice "vo_monk_ver_a15.ogg"
+    $ line = t("手脚裹着布，脸上包着手巾。耶稣对他们说：「解开他，让他走。」", "bound hand and foot with graveclothes: and his face was bound about with a napkin. Jesus saith unto them, Loose him, and let him go.")
+    monk "[line]"
+
     jump youth_amend
 
 label monk_verdict_b:
     voice "vo_monk_ver_b.ogg"
     $ line = t("我实实在在地告诉你们：时候将到，现在就是了，死人要听见神儿子的声音，听见的人就要活了。", "Verily, verily, I say unto you, The hour is coming, and now is, when the dead shall hear the voice of the Son of God: and they that hear shall live.")
     monk "[line]"
+    voice "vo_monk_ver_b4.ogg"
+    $ line = t("父怎样在自己有生命，就赐给他儿子也照样在自己有生命，并且因为他是人子，就赐给他行审判的权柄。你们不要把这事看作希奇。", "For as the Father hath life in himself; so hath he given to the Son to have life in himself; And hath given him authority to execute judgment also, because he is the Son of man. Marvel not at this:")
+    monk "[line]"
+
     voice "vo_monk_ver_b2.ogg"
     $ line = t("时候要到，凡在坟墓里的，都要听见他的声音，就出来。", "For the hour is coming, in the which all that are in the graves shall hear his voice, And shall come forth;")
     monk "[line]"
@@ -1208,12 +1543,26 @@ label monk_verdict_b:
     jump youth_amend
 
 label monk_verdict_c:
+    voice "vo_monk_ver_c4.ogg"
+    $ line = t("有一个女人，患了十二年的血漏，在好些医生手里受了许多的苦，又花尽了她所有的，一点也不见好，反倒更重了。", "A certain woman, which had an issue of blood twelve years, And had suffered many things of many physicians, and had spent all that she had, and was nothing bettered, but rather grew worse.")
+    monk "[line]"
+
     voice "vo_monk_ver_c.ogg"
     $ line = t("她听见耶稣的事，就从后头来，杂在众人中间，摸耶稣的衣裳，", "When she had heard of Jesus, she came in the press behind, and touched his garment.")
     monk "[line]"
     voice "vo_monk_ver_c2.ogg"
     $ line = t("心里说：「我只摸他的衣裳，就必痊愈。」于是她血漏的源头立刻干了，她便觉得身上的灾病好了。", "For she said, If I may touch but his clothes, I shall be whole. And straightway the fountain of her blood was dried up; and she felt in her body that she was healed of that plague.")
     monk "[line]"
+    voice "vo_monk_ver_c5.ogg"
+    $ line = t("耶稣心里知道有能力从自己身上出去，就转过来说：「摸我的是谁？」", "And immediately Jesus, knowing in himself that virtue had gone out of him, turned him about in the press, and said, Who touched my clothes?")
+    monk "[line]"
+    voice "vo_monk_ver_c6.ogg"
+    $ line = t("门徒说：「你看众人拥挤你，还问摸我的是谁吗？」", "And his disciples said unto him, Thou seest the multitude thronging thee, and sayest thou, Who touched me?")
+    monk "[line]"
+    voice "vo_monk_ver_c7.ogg"
+    $ line = t("耶稣周围观看，要见做这事的女人。那女人知道在自己身上所成的事，就恐惧战兢，来俯伏在耶稣跟前，将实情全告诉他。", "And he looked round about to see her that had done this thing. But the woman fearing and trembling, knowing what was done in her, came and fell down before him, and told him all the truth.")
+    monk "[line]"
+
     voice "vo_monk_ver_c3.ogg"
     $ line = t("耶稣对她说：「女儿，你的信救了你，平平安安地去吧！你的灾病痊愈了。」", "And he said unto her, Daughter, thy faith hath made thee whole; go in peace, and be whole of thy plague.")
     monk "[line]"
@@ -1270,15 +1619,27 @@ label lu_amend_b:
     jump ga_amend_choice
 
 label lu_amend_c:
+    voice "vo_lu_amd_c4.ogg"
+    $ line = t("颜渊问仁。", "Yan Yuan asked about perfect virtue.")
+    lu "[line]"
+
     voice "vo_lu_amd_c.ogg"
     $ line = t("克己复礼为仁。一日克己复礼，天下归仁焉。", "To subdue one's self and return to propriety is perfect virtue. If a man can for one day subdue himself and return to propriety, all under heaven will ascribe perfect virtue to him.")
     lu "[line]"
     voice "vo_lu_amd_c2.ogg"
     $ line = t("为仁由己，而由人乎哉？", "Is the practice of perfect virtue from a man himself, or is it from others?")
     lu "[line]"
+    voice "vo_lu_amd_c5.ogg"
+    $ line = t("颜渊曰：「请问其目。」", "Yan Yuan said, 'I beg to ask the steps of it.'")
+    lu "[line]"
+
     voice "vo_lu_amd_c3.ogg"
     $ line = t("非礼勿视，非礼勿听，非礼勿言，非礼勿动。", "Look not at what is contrary to propriety; speak not what is contrary to propriety; do not what is contrary to propriety.")
     lu "[line]"
+    voice "vo_lu_amd_c6.ogg"
+    $ line = t("颜渊曰：「回虽不敏，请事斯语矣。」", "Yan Yuan said, 'Slow as I am, I will make it my business to practice this saying.'")
+    lu "[line]"
+
     jump ga_amend_choice
 
 label ga_amend_choice:
@@ -1295,22 +1656,63 @@ label ga_amend_choice:
             jump ga_amend_c
 
 label ga_amend_a:
+    voice "vo_ga_amd_a3.ogg"
+    $ line = t("耶稣一下船，就有一个被污鬼附着的人从坟茔里出来迎着他。", "And when he was come out of the ship, immediately there met him out of the tombs a man with an unclean spirit,")
+    ga "[line]"
+    voice "vo_ga_amd_a4.ogg"
+    $ line = t("那人常住在坟茔里，没有人能捆住他，就是铁链也不能，因为人屡次用脚镣和铁链捆锁他，铁链竟被他挣断了，脚镣也被他弄碎了；总没有人能制伏他。", "Who had his dwelling among the tombs; and no man could bind him, no, not with chains: Because that he had been often bound with fetters and chains, and the chains had been plucked asunder by him, and the fetters broken in pieces: neither could any man tame him.")
+    ga "[line]"
+    voice "vo_ga_amd_a5.ogg"
+    $ line = t("他昼夜常在坟茔里和山中喊叫，又用石头砍自己。", "And always, night and day, he was in the mountains, and in the tombs, crying, and cutting himself with stones.")
+    ga "[line]"
+    voice "vo_ga_amd_a6.ogg"
+    $ line = t("他远远地看见耶稣，就跑过去拜他，大声呼叫说：「至高神的儿子耶稣，我与你有什么相干？我指着神恳求你，不要叫我受苦！」", "But when he saw Jesus afar off, he ran and worshipped him, And cried with a loud voice, and said, What have I to do with thee, Jesus, thou Son of the most high God? I adjure thee by God, that thou torment me not.")
+    ga "[line]"
+    voice "vo_ga_amd_a7.ogg"
+    $ line = t("是因耶稣曾吩咐他说：「污鬼啊，从这人身上出来吧。」", "For he said unto him, Come out of the man, thou unclean spirit.")
+    ga "[line]"
+
     voice "vo_ga_amd_a.ogg"
     $ line = t("耶稣问他：「你名叫什么？」回答说：「我名叫『群』，因为我们多的缘故。」", "And he asked him, What is thy name? And he answered, saying, My name is Legion: for we are many.")
     ga "[line]"
+    voice "vo_ga_amd_a8.ogg"
+    $ line = t("就再三地求耶稣，不要叫他们离开那地方。在那里山坡上，有一大群猪吃食。", "And he besought him much that he would not send them away out of the country. Now there was there nigh unto the mountains a great herd of swine feeding.")
+    ga "[line]"
+    voice "vo_ga_amd_a9.ogg"
+    $ line = t("鬼就央求耶稣说：「求你打发我们往猪群里，附着猪去。」", "And all the devils besought him, saying, Send us into the swine, that we may enter into them.")
+    ga "[line]"
+    voice "vo_ga_amd_a10.ogg"
+    $ line = t("耶稣准了他们，", "And he suffered them.")
+    ga "[line]"
+
     voice "vo_ga_amd_a2.ogg"
     $ line = t("污鬼就出来，进入猪里去。于是那群猪闯下山崖，投在海里，淹死了。", "And the unclean spirits went out, and entered into the swine: and the herd ran violently down a steep place into the sea, and were choked in the sea.")
     ga "[line]"
-    jump ending
+    voice "vo_ga_amd_a11.ogg"
+    $ line = t("猪的数目约有二千。", "And they were about two thousand swine.")
+    ga "[line]"
+
+    jump final_settle
 
 label ga_amend_b:
+    voice "vo_ga_amd_b3.ogg"
+    $ line = t("在会堂里有一个人，被污鬼的精气附着，大声喊叫说：", "And there was in their synagogue a man with an unclean spirit; and he cried out with a loud voice,")
+    ga "[line]"
+    voice "vo_ga_amd_b4.ogg"
+    $ line = t("「唉！拿撒勒的耶稣，我们与你有什么相干？你来灭我们吗？我知道你是谁，乃是神的圣者。」", "Saying, Let us alone; what have we to do with thee, thou Jesus of Nazareth? art thou come to destroy us? I know thee who thou art, the Holy One of God.")
+    ga "[line]"
+
     voice "vo_ga_amd_b.ogg"
     $ line = t("不要作声，从这人身上出来吧！", "Hold thy peace, and come out of him.")
     ga "[line]"
     voice "vo_ga_amd_b2.ogg"
     $ line = t("污鬼叫那人抽了一阵疯，大声喊叫，就出来了。众人都惊讶，彼此对问说：这是什么道理？他用权柄能力吩咐污鬼，污鬼就出来。", "And when the unclean spirit had torn him, and cried with a loud voice, he came out of him. And they were all amazed, saying, What thing is this? for with authority commandeth he even the unclean spirits, and they do obey him.")
     ga "[line]"
-    jump ending
+    voice "vo_ga_amd_b5.ogg"
+    $ line = t("于是耶稣的名声传遍了周围地方。", "And immediately his fame spread abroad into all the region of Galilee round about.")
+    ga "[line]"
+
+    jump final_settle
 
 label ga_amend_c:
     voice "vo_ga_amd_c.ogg"
@@ -1319,12 +1721,146 @@ label ga_amend_c:
     voice "vo_ga_amd_c2.ogg"
     $ line = t("求你将我的罪孽洗除净尽，并洁除我的罪！因为我知道我的过犯，我的罪常在我面前。", "Wash me throughly from mine iniquity, and cleanse me from my sin. For I acknowledge my transgressions: and my sin is ever before me.")
     ga "[line]"
+    voice "vo_ga_amd_c4.ogg"
+    $ line = t("我向你犯罪，唯独得罪了你，在你眼前行了这恶，以致你责备我的时候显为公义，判断我的时候显为清正。", "Against thee, thee only, have I sinned, and done this evil in thy sight: that thou mightest be justified when thou speakest, and be clear when thou judgest.")
+    ga "[line]"
+    voice "vo_ga_amd_c5.ogg"
+    $ line = t("我是在罪孽里生的，在我母亲怀胎的时候就有了罪。", "Behold, I was shapen in iniquity; and in sin did my mother conceive me.")
+    ga "[line]"
+    voice "vo_ga_amd_c6.ogg"
+    $ line = t("你所喜爱的是内里诚实，你在我隐密处必使我得智慧。", "Behold, thou desirest truth in the inward parts: and in the hidden part thou shalt make me to know wisdom.")
+    ga "[line]"
+    voice "vo_ga_amd_c7.ogg"
+    $ line = t("求你用牛膝草洁净我，我就干净；求你洗涤我，我就比雪更白。", "Purge me with hyssop, and I shall be clean: wash me, and I shall be whiter than snow.")
+    ga "[line]"
+    voice "vo_ga_amd_c8.ogg"
+    $ line = t("求你使我得听欢喜快乐的声音，使你所压伤的骨头可以踊跃。", "Make me to hear joy and gladness; that the bones which thou hast broken may rejoice.")
+    ga "[line]"
+    voice "vo_ga_amd_c9.ogg"
+    $ line = t("求你掩面不看我的罪，涂抹我一切的罪孽。", "Hide thy face from my sins, and blot out all mine iniquities.")
+    ga "[line]"
+
     voice "vo_ga_amd_c3.ogg"
     $ line = t("求你为我造清洁的心，使我里面重新有正直的灵。不要丢弃我，使我离开你的面，不要从我收回你的圣灵。", "Create in me a clean heart, O God; and renew a right spirit within me. Cast me not away from thy presence; and take not thy holy spirit from me.")
     ga "[line]"
-    jump ending
+    jump final_settle
 
     # ========== 结局 ==========
+label final_settle:
+    $ wins = win_material + win_emptiness + win_root
+    if wins >= 2:
+        jump ending
+    jump ending_bad
+
+label ending_bad:
+    # ========== 坏结局 ==========
+    scene art26_look_up with fade
+    voice "vo_bad_001.ogg"
+    $ line = t("审判结束了，少年倨傲地抬起头，用他那苍白病态的目光注视着缥缈的火光中缄默不语着的两位判官。", "The trial drew to its close. The youth lifted his head haughtily, his pale, sickly gaze fixed upon the two silent judges amid the wavering fire-light.")
+    narrator "[line]"
+
+    voice "vo_bad_002.ogg"
+    $ line = t("此刻，他多想乘他们不注意，故相陵轹地逃离这个让他敝虑竭晷的牢狱。", "At this moment, he longed to slip away unseen and flee this prison that had worn his spirit thin.")
+    narrator "[line]"
+
+    voice "vo_bad_003.ogg"
+    $ line = t("同时，他突然感到疑惑，自己到此处来的目的何在？", "At the same time, a sudden doubt stirred within him: what had even brought him hither?")
+    narrator "[line]"
+
+    voice "vo_bad_004.ogg"
+    scene art27_walk_out with fade
+    $ line = t("在一阵沉默之后，从他的身后传出的一阵熟悉而又陌生的脚步声打破了这场阒寂，少年惊奇地发现，从后方走来的竟是他自己。", "After a spell of silence, familiar yet alien footsteps behind him rent the hush. To the youth's astonishment, it was his own self that stepped forth.")
+    narrator "[line]"
+
+    voice "vo_bad_005.ogg"
+    $ line = t("那个他正嬉皮笑脸地注视着自己，丝毫不掩盖自己鸷狠狼黠的品行。", "This other-self gazed back at him with a mocking grin, making no attempt to hide his fierce, crafty nature.")
+    narrator "[line]"
+
+    voice "vo_bad_006.ogg"
+    scene art28_face_to_face with fade
+    $ line = t("你是谁？", "Who are you?")
+    s "[line]"
+
+    voice "vo_bad_007.ogg"
+    $ line = t("少年讶异道，他的嗓音发颤，用恛惶的目光回敬他。", "the youth asked in bewilderment, his voice trembling, returning the stare with disquieted eyes.")
+    narrator "[line]"
+
+    voice "vo_bad_008.ogg"
+    $ line = t("我是谁并不重要，", "Who I am matters little,")
+    other "[line]"
+
+    voice "vo_bad_009.ogg"
+    $ line = t("更何况你比谁都清楚。", "What is more, you know full well.")
+    other "[line]"
+
+    voice "vo_bad_010.ogg"
+    $ line = t("少年幡然憬悟，若有所思地沉默着。", "The youth came to a sudden realisation and lapsed into thoughtful silence.")
+    narrator "[line]"
+
+    voice "vo_bad_011.ogg"
+    $ line = t("这时，那「另一个」「少年」褊慢肆侮地指着鲁鄹邑人，出言不逊道：", "Then this other youth pointed scornfully toward the Man of Zou from Lu and spoke insolently:")
+    narrator "[line]"
+
+    voice "vo_bad_012.ogg"
+    $ line = t("此夫鲁国之巧伪人孔丘非邪？为我告之：尔作言造语，妄称文、武，冠枝木之冠，带死牛之胁，多辞缪说，不耕而食，不织而衣，摇唇鼓舌，擅生是非，以迷天下之主，使天下学士不反其本，妄作孝弟，而侥幸于封侯富贵者也。子之罪大极重，疾走归！", "Is not this the crafty hypocrite Kung-chiu of Lu? Tell him from me: You coin speeches and false doctrines, presumptuously invoking King Wen and King Wu. You wear a headdress adorned like branching wood, gird yourself with the ribs of slaughtered oxen. With your abundant fallacious discourses, you eat though you plough not, you wear garments though you weave not. You wag your lips and stir up quarrels, to bewilder the lords of the world. You cause scholars to turn away from their true roots, idly inventing filial piety and fraternal deference, all in hope of winning noble rank and riches. Your crimes are grave beyond measure. Begone and return!")
+    other "[line]"
+
+    voice "vo_bad_013.ogg"
+    $ line = t("说完，他又指着加利利拿撒勒人道：", "Having spoken, he turned and pointed toward the Man of Nazareth from Galilee:")
+    narrator "[line]"
+
+    voice "vo_bad_014.ogg"
+    $ line = t("救了别人，不能救自己。他是以色列的王，现在可以从十字架上下来，我们就信他。他倚靠神，神若喜悦他，现在可以救他，因为他曾说：「我是神的儿子。」", "He saved others; himself he cannot save. If he be the King of Israel, let him now come down from the cross, and we will believe him. He trusted in God; let him deliver him now, if he will have him: for he said, I am the Son of God.")
+    other "[line]"
+
+    voice "vo_bad_015.ogg"
+    $ line = t("……", "……")
+    narrator "[line]"
+
+    voice "vo_bad_016.ogg"
+    scene art31_leave with fade
+    $ line = t("从那座敝旧的小屋飞出，少年感到神清气爽，为自己与那两位所谓圣贤唇枪舌剑而逞奸自快。", "He burst forth out of that weather-beaten cottage, feeling light-hearted, exulting in his sharp-tongued victory over those so-called sages.")
+    narrator "[line]"
+
+    voice "vo_bad_017.ogg"
+    scene art32_look_back with fade
+    $ line = t("它回头望向那座还不曾离远的小屋，发现此刻他曾对其出言不逊的两位出现在大门口，扼腕兴叹，凝神注视着它。最后哀叹道：", "He glanced back toward the cottage not yet far behind him, and saw the two he had insulted standing in the doorway. They sighed with grief, their gaze fixed upon him. At last they uttered their lament:")
+    narrator "[line]"
+
+    voice "vo_bad_018.ogg"
+    $ line = t("古者民有三疾，今也或是之亡也。古之狂也肆，今之狂也荡；古之矜也廉，今之矜也忿戾；古之愚也直，今之愚也诈而已矣。", "Anciently, men had three failings, which now perhaps are not to be found. The high-mindedness of antiquity showed itself in a disregard of small things; the high-mindedness of the present day shows itself in wild license. The stern dignity of antiquity showed itself in grave reserve; the stern dignity of the present day shows itself in quarrelsome perverseness. The stupidity of antiquity showed itself in straightforwardness; the stupidity of the present day shows itself in sheer deceit.")
+    lu "[line]"
+
+    voice "vo_bad_019.ogg"
+    $ line = t("地上虔诚人灭尽；世间没有正直人；各人埋伏，要杀人流血，都用网罗猎取弟兄。", "The good man is perished out of the earth: and there is none upright among men: they all lie in wait for blood; they hunt every man his brother with a net.")
+    ga "[line]"
+
+    voice "vo_bad_020.ogg"
+    $ line = t("呵，", "Hah,")
+    s "[line]"
+
+    voice "vo_bad_021.ogg"
+    scene art34_run_dark with fade
+    $ line = t("少年冷笑道，望着前方沉沉的黝黯，玄冥杳暗吞噬着它的躯壳，也吞噬着它的魂灵。随后又低头沉思：", "the youth sneered, gazing into the heavy blackness ahead. The obscure endless gloom swallowed his frame, and swallowed his very soul. Then he bowed his head and pondered.")
+    narrator "[line]"
+
+    voice "vo_bad_022.ogg"
+    $ line = t("这是梦。", "This is a dream.")
+    s "[line]"
+
+    voice "vo_bad_023.ogg"
+    $ line = t("它得出结论道，或许会是梦里随后的半途跌跤而惊悸，或许会是晨曦机械的闹钟的轰鸣……总之，这不过的黄粱一梦，是修普洛斯的奥义罢了……", "he concluded. Perhaps he would start awake with a fright mid-fall within this dream. Or perhaps the cold blare of the morning alarm would rouse him… In any case, it was nothing but a millet-dream, the secret wisdom of Hypnos…")
+    narrator "[line]"
+
+    voice "vo_bad_024.ogg"
+    $ line = t("想到此时，少年又狂妄地枭笑起来，纵身朝远处混沌的黑暗中奔去……", "With that thought, the youth let out another wild, arrogant laugh and sprang forward, running deep into the chaotic darkness afar……")
+    narrator "[line]"
+
+    scene black with fade
+    stop music fadeout 2.0
+
+    return
+
 label ending:
     scene art31_leave with fade
     voice "vo_narr_052.ogg"

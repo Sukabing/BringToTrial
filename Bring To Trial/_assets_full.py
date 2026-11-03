@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把美术资源全部（33 张）转成 1920x1080 jpg，放进正式版 game/art。"""
+"""把美术资源全部（34 张）转成 1920x1080 jpg，放进正式版 game/art。"""
 import subprocess
 import sys
 from pathlib import Path
@@ -42,6 +42,7 @@ PAIRS = [
     ("115-117 走出小屋 结尾段.jpeg", "art31_leave"),
     ("118-122 少年回头看圣人.jpeg", "art32_look_back"),
     ("结尾 少年跑向旷野.jpeg", "art33_field"),
+    ("奔向黑暗.png", "art34_run_dark"),
 ]
 
 DST.mkdir(parents=True, exist_ok=True)

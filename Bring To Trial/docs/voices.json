@@ -6,7 +6,7 @@
     "voice_prefixes": [
       "vo_narr"
     ],
-    "line_count": 58,
+    "line_count": 86,
     "voice_direction": "中性、低沉、冷静，近乎不带情绪的时间底色；语速偏慢，句尾不拖",
     "tts_hint": "中性男声或成熟女声皆可；rate 0.9；低情绪强度；不要角色化处理",
     "gender": "any",
@@ -24,7 +24,7 @@
     "voice_prefixes": [
       "vo_s"
     ],
-    "line_count": 39,
+    "line_count": 51,
     "voice_direction": "青年男声，二十上下，声线偏亮却发虚；傲慢时有轻挑的滑音，崩溃处带哭腔",
     "tts_hint": "青年男声；rate 1.0；需要三档情绪：傲慢／犹疑／啜泣；避免卡通化",
     "gender": "male",
@@ -51,7 +51,7 @@
       "vo_lu_amd",
       "vo_lu_end"
     ],
-    "line_count": 46,
+    "line_count": 61,
     "voice_direction": "长者男声，温厚沉稳，诵经典时气息绵长、字字落地；不激昂",
     "tts_hint": "老年男声；rate 0.85；强度低，句中停顿可略长；引用经典时保持同一语气",
     "gender": "male",
@@ -77,7 +77,7 @@
       "vo_ga_amd",
       "vo_ga_end"
     ],
-    "line_count": 39,
+    "line_count": 63,
     "voice_direction": "中年男声，音量不高但有穿透，带一点疲惫后的温柔；不煽情",
     "tts_hint": "中年男声；rate 0.9；轻声但不虚弱；避免布道腔",
     "gender": "male",
@@ -101,7 +101,7 @@
       "vo_conf_emp",
       "vo_conf_ver"
     ],
-    "line_count": 33,
+    "line_count": 46,
     "voice_direction": "壮年男声，清正、方正、字正腔圆，语调平直少起伏",
     "tts_hint": "壮年男声；rate 1.0；咬字清晰；情绪恒定",
     "gender": "male",
@@ -122,7 +122,7 @@
       "vo_monk_emp",
       "vo_monk_ver"
     ],
-    "line_count": 35,
+    "line_count": 51,
     "voice_direction": "中老年男声，嗓音粗粝微沙，带诵经的韵律感",
     "tts_hint": "老年男声；rate 0.85；轻微沙哑与气声；诵经句可加长尾",
     "gender": "male",
@@ -161,7 +161,7 @@
     "voice_prefixes": [
       "vo_other"
     ],
-    "line_count": 3,
+    "line_count": 7,
     "voice_direction": "少年自己的另一个我：同一声线的低八度版本，平静且不容置疑",
     "tts_hint": "少年声线降调 2~3 半音，加轻微混响；rate 0.85；不带情绪",
     "gender": "male",

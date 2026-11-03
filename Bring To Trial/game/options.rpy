@@ -1,4 +1,4 @@
-﻿## 此文件包含有可自定义您游戏的设置。
+## 此文件包含有可自定义您游戏的设置。
 ##
 ## 以“##”开头的语句是注释，您不应该对其取消注释。以“#”开头的语句是注释掉的代码，
 ## 在适用的时候您可能需要对其取消注释。
@@ -61,7 +61,8 @@ define config.autosave_on_choice = True
 ## 将以下语句取消注释就可以设置标题界面播放的背景音乐文件。此文件将在整个游戏中
 ## 持续播放，直至音乐停止或其他文件开始播放。
 
-# define config.main_menu_music = "main-menu-theme.ogg"
+define config.main_menu_music = "audio/bgm.ogg"
+define config.main_menu_music_fadein = 2.0
 
 
 ## 转场 ##########################################################################
@@ -170,9 +171,15 @@ init python:
 
     build.classify('**~', None)
     build.classify('**.bak', None)
+    build.classify('**.bak-*', None)
     build.classify('**/.**', None)
     build.classify('**/#**', None)
     build.classify('**/thumbs.db', None)
+
+    ## 项目根目录的开发残留，别打进发行版
+    build.classify('**.orig', None)
+    build.classify('/*.wav', None)
+    build.classify('/*.py', None)
 
     ## 若要封装文件，需将其列为“archive”。
 

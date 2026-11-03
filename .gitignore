@@ -17,8 +17,12 @@
 # 美术原图（源素材，不入库；转换后的成品在 game/art/ 里）
 美术资源（豆包/
 
+# BGM 母带（68 MB 的 wav 源，成品在 game/audio/bgm.ogg）
+*/bg.wav
+
 # 编辑器/系统杂项
 .DS_Store
 Thumbs.db
 *.bak
+*.bak-*
 *.tmp

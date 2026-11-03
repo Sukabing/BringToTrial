@@ -17,7 +17,7 @@ ART = ["art01_entry", "art02_walk", "art03_meet_sages", "art04_confucius", "art0
        "art15_wild_laugh", "art16_standoff", "art17_realize", "art18_gloomy", "art19_choice3",
        "art20_choice4", "art21_struggle", "art22_look_at_them", "art23_despair", "art24_choice5",
        "art25_choice6", "art26_look_up", "art27_walk_out", "art28_face_to_face", "art29_choice7",
-       "art30_ask", "art31_leave", "art32_look_back", "art33_field"]
+       "art30_ask", "art31_leave", "art32_look_back", "art33_field", "art34_run_dark"]
 
 # (锚点子串, 第几次出现, 图片名, before|after)
 ANCHORS = [
@@ -193,6 +193,18 @@ def main():
             sys.exit("label start 不唯一，放弃")
         text = text.replace("label start:", block, 1)
         report.append(f"图片定义: 插入 {len(ART)} 条")
+
+    # ---- 6. 坏结局收尾图（奔向黑暗） ----
+    BAD_OLD = '    scene art33_field with fade\n    $ line = t("少年冷笑道'
+    BAD_NEW = '    scene art34_run_dark with fade\n    $ line = t("少年冷笑道'
+    if "art34_run_dark = " not in text:
+        text = text.replace('image art33_field = "art/art33_field.jpg"',
+                            'image art33_field = "art/art33_field.jpg"\n'
+                            'image art34_run_dark = "art/art34_run_dark.jpg"', 1)
+        report.append("坏结局配图: 已加定义")
+    if BAD_OLD in text:
+        text = text.replace(BAD_OLD, BAD_NEW, 1)
+        report.append("坏结局配图: 已切到 art34_run_dark")
 
     SRC.write_text(text, encoding="utf-8")
     print("\n".join(report))
